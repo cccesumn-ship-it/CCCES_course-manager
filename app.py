@@ -38,9 +38,6 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
-Part 2 of 6: app.py - Login and Admin Routes
-Add this to your app.py (continue from Part 1):
-
 # ============================================
 # LOGIN AND ADMIN ROUTES
 # ============================================
