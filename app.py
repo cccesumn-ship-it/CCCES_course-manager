@@ -1,411 +1,434 @@
-import os
-from datetime import datetime, date
-from flask import (
-    Flask,
-    render_template,
-    request,
-    redirect,
-    url_for,
-    flash,
-    send_file,
-    make_response,
-)
-from werkzeug.utils import secure_filename
-from io import BytesIO
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+from models import db, Course, Participant, CustomQuestion, ParticipantAnswer, HotelRequest, ReminderTracking, ParticipantFile
+from email_utils import send_email, send_rsvp_email, send_info_form_email, send_hotel_finalization_email, send_file_upload_email
+from datetime import datetime, timedelta
 import pandas as pd
-import sys
-
-print("PYTHON VERSION AT RUNTIME:", sys.version)
-
-from models import (
-    db,
-    Course,
-    Participant,
-    CustomQuestion,
-    ParticipantAnswer,
-    HotelRequest,
-)
-from email_utils import (
-    decode_token,
-    send_initial_rsvp_email,
-    send_info_form_email,
-    send_hotel_form_email,
-    make_token,
-)
+import secrets
+import os
+from io import BytesIO
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-key")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///courses.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SECRET_KEY'] = 'your-secret-key-change-this'
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
-# Configure database URL and driver
-db_url = os.environ.get("DATABASE_URL", "sqlite:///local.db")
-
-# Normalize old postgres:// to postgresql://
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-# If using PostgreSQL, force psycopg v3 driver
-if db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
-
-app.config["SQLALCHEMY_DATABASE_URI"] = db_url
-app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+# Create uploads folder if it doesn't exist
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db.init_app(app)
 
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+# Admin credentials (change these!)
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "password123"
 
-
-def admin_logged_in():
-    return request.cookies.get("admin_pass") == ADMIN_PASSWORD
-
-
-def admin_required(view):
-    def wrapper(*args, **kwargs):
-        if not admin_logged_in():
-            return redirect(url_for("admin_login"))
-        return view(*args, **kwargs)
-
-    wrapper.__name__ = view.__name__
-    return wrapper
-
-
-@app.route("/admin-login", methods=["GET", "POST"])
-def admin_login():
-    if request.method == "POST":
-        if request.form.get("password") == ADMIN_PASSWORD:
-            resp = make_response(redirect(url_for("admin")))
-            resp.set_cookie("admin_pass", ADMIN_PASSWORD, httponly=True)
-            return resp
-        flash("Wrong password", "error")
-    return render_template("login.html")
-
-
-@app.route("/")
-def index():
-    return redirect(url_for("admin"))
-
-
-@app.route("/admin", methods=["GET"])
-@admin_required
-def admin():
-    courses = Course.query.order_by(Course.created_at.desc()).all()
-    return render_template("admin.html", courses=courses)
-
-
-@app.route("/admin/create-course", methods=["POST"])
-@admin_required
-def create_course():
-    name = request.form.get("name")
-    start_date = request.form.get("start_date")
-    end_date = request.form.get("end_date")
-    hotel_night1 = request.form.get("hotel_night1") or None
-    hotel_night2 = request.form.get("hotel_night2") or None
-    hotel_night3 = request.form.get("hotel_night3") or None
-
-    c = Course(
-        name=name,
-        start_date=date.fromisoformat(start_date),
-        end_date=date.fromisoformat(end_date),
-        hotel_night1=date.fromisoformat(hotel_night1) if hotel_night1 else None,
-        hotel_night2=date.fromisoformat(hotel_night2) if hotel_night2 else None,
-        hotel_night3=date.fromisoformat(hotel_night3) if hotel_night3 else None,
-    )
-    db.session.add(c)
-    db.session.commit()
-    flash("Course created", "success")
-    return redirect(url_for("admin"))
-
-
-@app.route("/admin/course/<int:course_id>", methods=["GET"])
-@admin_required
-def course_detail(course_id):
-    course = Course.query.get_or_404(course_id)
-    participants = Participant.query.filter_by(course_id=course.id).all()
-    questions = CustomQuestion.query.filter_by(course_id=course.id).order_by(
-        CustomQuestion.order_index
-    )
-    return render_template(
-        "admin.html",
-        courses=[course],
-        course=course,
-        participants=participants,
-        questions=questions,
-    )
-
-
-@app.route("/admin/course/<int:course_id>/upload", methods=["POST"])
-@admin_required
-def upload_participants(course_id):
-    course = Course.query.get_or_404(course_id)
-    file = request.files.get("file")
-    if not file:
-        flash("No file uploaded", "error")
-        return redirect(url_for("course_detail", course_id=course.id))
-
-    filename = secure_filename(file.filename)
-    if not filename.lower().endswith((".csv", ".xlsx", ".xls")):
-        flash("Please upload a CSV or Excel file", "error")
-        return redirect(url_for("course_detail", course_id=course.id))
-
-    if filename.lower().endswith(".csv"):
-        df = pd.read_csv(file)
-    else:
-        df = pd.read_excel(file)
-
-    required_cols = {"email"}
-    if not required_cols.issubset(set(df.columns.str.lower())):
-        flash("File must contain at least an 'email' column", "error")
-        return redirect(url_for("course_detail", course_id=course.id))
-
-    # Normalize column names
-    df.columns = [c.lower().strip() for c in df.columns]
-
-    created = 0
-    for _, row in df.iterrows():
-        email = str(row.get("email", "")).strip()
-        if not email:
-            continue
-        if Participant.query.filter_by(course_id=course.id, email=email).first():
-            continue
-        p = Participant(
-            course_id=course.id,
-            email=email,
-            first_name=str(row.get("first_name", "")).strip() or None,
-            last_name=str(row.get("last_name", "")).strip() or None,
-        )
-        db.session.add(p)
-        created += 1
-
-    db.session.commit()
-    flash(f"Imported {created} participants.", "success")
-    return redirect(url_for("course_detail", course_id=course.id))
-
-
-@app.route("/admin/course/<int:course_id>/send-initial", methods=["POST"])
-@admin_required
-def send_initial(course_id):
-    course = Course.query.get_or_404(course_id)
-    participants = Participant.query.filter_by(course_id=course.id).all()
-    sent = 0
-    for p in participants:
-        if p.status == "INVITED" and not p.attending_responded:
-            send_initial_rsvp_email(p)
-            sent += 1
-    flash(f"Sent initial RSVP emails to {sent} participants.", "success")
-    return redirect(url_for("course_detail", course_id=course.id))
-
-
-@app.route("/rsvp/<token>")
-def rsvp(token):
-    try:
-        pid = decode_token(token)
-    except Exception:
-        return render_template("message.html", title="Error", body="Invalid or expired link.")
-
-    participant = Participant.query.get_or_404(pid)
-    answer = request.args.get("answer")
-    if answer == "yes":
-        participant.status = "CONFIRMED"
-        participant.attending_responded = True
-        db.session.commit()
-        # Send info and hotel email link
-        send_info_form_email(participant)
-        send_hotel_form_email(participant)
-        return render_template(
-            "message.html",
-            title="Thank you",
-            body="Thank you for confirming your attendance. Please check your email for the information form link.",
-        )
-    elif answer == "no":
-        participant.status = "DECLINED"
-        participant.attending_responded = True
-        db.session.commit()
-        return render_template(
-            "message.html",
-            title="Response recorded",
-            body="Thank you. Your response has been recorded as not attending.",
-        )
-    else:
-        return render_template("rsvp.html", participant=participant, token=token)
-
-
-@app.route("/info-form/<token>", methods=["GET", "POST"])
-def info_form(token):
-    try:
-        pid = decode_token(token)
-    except Exception:
-        return render_template("message.html", title="Error", body="Invalid or expired link.")
-
-    participant = Participant.query.get_or_404(pid)
-    if participant.status != "CONFIRMED":
-        return render_template(
-            "message.html",
-            title="Not attending",
-            body="You are not marked as attending this course.",
-        )
-
-    course = participant.course
-    questions = CustomQuestion.query.filter_by(course_id=course.id).order_by(
-        CustomQuestion.order_index
-    )
-
-    if request.method == "POST":
-        # Save answers
-        for q in questions:
-            field_name = f"q_{q.id}"
-            val = request.form.get(field_name, "").strip()
-            ans = ParticipantAnswer.query.filter_by(
-                participant_id=participant.id, question_id=q.id
-            ).first()
-            if not ans:
-                ans = ParticipantAnswer(
-                    participant_id=participant.id,
-                    question_id=q.id,
-                    answer_text=val,
-                )
-                db.session.add(ans)
-            else:
-                ans.answer_text = val
-
-        # Hotel part
-        need_hotel = request.form.get("need_hotel")
-        hr = participant.hotel_request
-        if not hr:
-            hr = HotelRequest(participant_id=participant.id)
-            db.session.add(hr)
-
-        if need_hotel == "yes":
-            hr.need_hotel = True
-            hr.night1 = bool(request.form.get("night1"))
-            hr.night2 = bool(request.form.get("night2"))
-            hr.night3 = bool(request.form.get("night3"))
-        elif need_hotel == "no":
-            hr.need_hotel = False
-            hr.night1 = hr.night2 = hr.night3 = False
-
-        db.session.commit()
-
-        flash("Information saved. Thank you!", "success")
-        return redirect(url_for("info_form", token=token))
-
-    # GET: prefill
-    answers_map = {
-        a.question_id: a.answer_text
-        for a in ParticipantAnswer.query.filter_by(participant_id=participant.id).all()
-    }
-    hotel = participant.hotel_request
-    return render_template(
-        "info_form.html",
-        participant=participant,
-        course=course,
-        questions=questions,
-        answers_map=answers_map,
-        hotel=hotel,
-    )
-
-
-@app.route("/admin/course/<int:course_id>/add-question", methods=["POST"])
-@admin_required
-def add_question(course_id):
-    course = Course.query.get_or_404(course_id)
-    label = request.form.get("label")
-    required = bool(request.form.get("required"))
-    order_index = int(request.form.get("order_index") or 0)
-    q = CustomQuestion(
-        course_id=course.id,
-        label=label,
-        required=required,
-        order_index=order_index,
-    )
-    db.session.add(q)
-    db.session.commit()
-    flash("Question added", "success")
-    return redirect(url_for("course_detail", course_id=course.id))
-
-
-@app.route("/admin/course/<int:course_id>/hotel-summary")
-@admin_required
-def hotel_summary(course_id):
-    course = Course.query.get_or_404(course_id)
-    prs = Participant.query.filter_by(course_id=course.id, status="CONFIRMED").all()
-    night1 = night2 = night3 = 0
-    seq_counts = {}
-    for p in prs:
-        hr = p.hotel_request
-        if not hr or not hr.need_hotel:
-            continue
-        if hr.night1:
-            night1 += 1
-        if hr.night2:
-            night2 += 1
-        if hr.night3:
-            night3 += 1
-        seq = (
-            ("1" if hr.night1 else "-")
-            + ("2" if hr.night2 else "-")
-            + ("3" if hr.night3 else "-")
-        )
-        seq_counts[seq] = seq_counts.get(seq, 0) + 1
-
-    return render_template(
-        "hotel_summary.html",
-        course=course,
-        night1=night1,
-        night2=night2,
-        night3=night3,
-        seq_counts=seq_counts,
-    )
-
-
-@app.route("/admin/course/<int:course_id>/export")
-@admin_required
-def export_excel(course_id):
-    course = Course.query.get_or_404(course_id)
-    participants = Participant.query.filter_by(course_id=course.id).all()
-    questions = CustomQuestion.query.filter_by(course_id=course.id).order_by(
-        CustomQuestion.order_index
-    )
-
-    rows = []
-    for p in participants:
-        row = {
-            "First Name": p.first_name,
-            "Last Name": p.last_name,
-            "Email": p.email,
-            "Status": p.status,
-        }
-        answers = {
-            a.question_id: a.answer_text
-            for a in ParticipantAnswer.query.filter_by(participant_id=p.id).all()
-        }
-        for q in questions:
-            row[q.label] = answers.get(q.id, "")
-        hr = p.hotel_request
-        row["Need Hotel"] = hr.need_hotel if hr else None
-        row["Night1"] = hr.night1 if hr else False
-        row["Night2"] = hr.night2 if hr else False
-        row["Night3"] = hr.night3 if hr else False
-        rows.append(row)
-
-    df = pd.DataFrame(rows)
-    output = BytesIO()
-    with pd.ExcelWriter(output, engine="openpyxl") as writer:
-        df.to_excel(writer, index=False, sheet_name="Participants")
-    output.seek(0)
-
-    filename = f"course_{course.id}_export.xlsx"
-    return send_file(
-        output,
-        as_attachment=True,
-        download_name=filename,
-        mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    )
-
-
-# Create tables once at import time
 with app.app_context():
     db.create_all()
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
+# Helper function to check if user is logged in
+def login_required(f):
+    from functools import wraps
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if 'logged_in' not in session:
+            return redirect(url_for('admin_login'))
+        return f(*args, **kwargs)
+    return decorated_function
+
+Part 2 of 6: app.py - Login and Admin Routes
+Add this to your app.py (continue from Part 1):
+
+# ============================================
+# LOGIN AND ADMIN ROUTES
+# ============================================
+
+@app.route('/')
+def index():
+    return redirect(url_for('admin_login'))
+
+
+@app.route('/admin-login', methods=['GET', 'POST'])
+def admin_login():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        password = request.form.get('password')
+        
+        if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+            session['logged_in'] = True
+            return redirect(url_for('admin'))
+        else:
+            return render_template('admin_login.html', error='Invalid credentials')
+    
+    return render_template('admin_login.html')
+
+
+@app.route('/logout')
+def logout():
+    session.pop('logged_in', None)
+    return redirect(url_for('admin_login'))
+
+
+@app.route('/admin')
+@login_required
+def admin():
+    courses = Course.query.all()
+    message = request.args.get('message')
+    return render_template('admin.html', courses=courses, message=message)
+
+
+@app.route('/create-course', methods=['POST'])
+@login_required
+def create_course():
+    name = request.form.get('name')
+    start_date = datetime.strptime(request.form.get('start_date'), '%Y-%m-%d').date()
+    end_date = datetime.strptime(request.form.get('end_date'), '%Y-%m-%d').date()
+    
+    hotel_night1 = request.form.get('hotel_night1')
+    hotel_night2 = request.form.get('hotel_night2')
+    hotel_night3 = request.form.get('hotel_night3')
+    
+    course = Course(
+        name=name,
+        start_date=start_date,
+        end_date=end_date,
+        hotel_night1=datetime.strptime(hotel_night1, '%Y-%m-%d').date() if hotel_night1 else None,
+        hotel_night2=datetime.strptime(hotel_night2, '%Y-%m-%d').date() if hotel_night2 else None,
+        hotel_night3=datetime.strptime(hotel_night3, '%Y-%m-%d').date() if hotel_night3 else None
+    )
+    
+    db.session.add(course)
+    db.session.commit()
+    
+    return redirect(url_for('admin', message='Course created successfully'))
+
+
+@app.route('/delete-course/<int:course_id>')
+@login_required
+def delete_course(course_id):
+    course = Course.query.get_or_404(course_id)
+    db.session.delete(course)
+    db.session.commit()
+    return redirect(url_for('admin', message='Course deleted successfully'))
+
+# ============================================
+# COURSE DETAIL AND PARTICIPANT MANAGEMENT
+# ============================================
+
+@app.route('/course/<int:course_id>')
+@login_required
+def course_detail(course_id):
+    course = Course.query.get_or_404(course_id)
+    participants = Participant.query.filter_by(course_id=course_id, role='PARTICIPANT').all()
+    faculty = Participant.query.filter_by(course_id=course_id, role='FACULTY').all()
+    message = request.args.get('message')
+    return render_template('course_detail.html', 
+                         course=course, 
+                         participants=participants,
+                         faculty=faculty,
+                         message=message)
+
+
+@app.route('/upload-participants/<int:course_id>', methods=['POST'])
+@login_required
+def upload_participants(course_id):
+    course = Course.query.get_or_404(course_id)
+    file = request.files.get('file')
+    role = request.form.get('role', 'PARTICIPANT')
+    
+    if not file:
+        return redirect(url_for('course_detail', course_id=course_id, message='No file uploaded'))
+    
+    try:
+        df = pd.read_excel(file)
+        
+        if 'email' not in df.columns:
+            return redirect(url_for('course_detail', course_id=course_id, message='Excel file must have an "email" column'))
+        
+        count = 0
+        for _, row in df.iterrows():
+            email = row['email']
+            if pd.notna(email) and email.strip():
+                existing = Participant.query.filter_by(course_id=course_id, email=email.strip()).first()
+                if not existing:
+                    participant = Participant(
+                        course_id=course_id,
+                        email=email.strip(),
+                        role=role,
+                        status='INVITED'
+                    )
+                    db.session.add(participant)
+                    count += 1
+        
+        db.session.commit()
+        role_name = "faculty" if role == "FACULTY" else "participants"
+        return redirect(url_for('course_detail', course_id=course_id, message=f'{count} {role_name} added successfully'))
+    
+    except Exception as e:
+        return redirect(url_for('course_detail', course_id=course_id, message=f'Error: {str(e)}'))
+
+
+@app.route('/delete-participant/<int:participant_id>')
+@login_required
+def delete_participant(participant_id):
+    participant = Participant.query.get_or_404(participant_id)
+    course_id = participant.course_id
+    db.session.delete(participant)
+    db.session.commit()
+    return redirect(url_for('course_detail', course_id=course_id, message='Participant deleted successfully'))
+
+
+@app.route('/add-question/<int:course_id>', methods=['POST'])
+@login_required
+def add_question(course_id):
+    course = Course.query.get_or_404(course_id)
+    
+    label = request.form.get('label')
+    field_type = request.form.get('field_type', 'text')
+    required = 'required' in request.form
+    
+    question = CustomQuestion(
+        course_id=course_id,
+        label=label,
+        field_type=field_type,
+        required=required,
+        order_index=len(course.questions)
+    )
+    
+    db.session.add(question)
+    db.session.commit()
+    
+    return redirect(url_for('course_detail', course_id=course_id, message='Question added successfully'))
+
+# ============================================
+# DELETE QUESTION, PREVIEW, AND EXPORT
+# ============================================
+
+@app.route('/delete-question/<int:question_id>', methods=['POST'])
+@login_required
+def delete_question(question_id):
+    question = CustomQuestion.query.get_or_404(question_id)
+    course_id = question.course_id
+    db.session.delete(question)
+    db.session.commit()
+    return redirect(url_for('course_detail', course_id=course_id, message='Question deleted successfully'))
+
+
+@app.route('/preview-form/<int:course_id>')
+@login_required
+def preview_form(course_id):
+    course = Course.query.get_or_404(course_id)
+    return render_template('preview_form.html', course=course)
+
+
+@app.route('/export-participants/<int:course_id>')
+@login_required
+def export_participants(course_id):
+    course = Course.query.get_or_404(course_id)
+    role_filter = request.args.get('role')
+    
+    # Build query based on role filter
+    if role_filter:
+        participants = Participant.query.filter_by(course_id=course_id, role=role_filter).all()
+        filename = f"{course.name}_{role_filter.lower()}_export.xlsx"
+    else:
+        participants = Participant.query.filter_by(course_id=course_id).all()
+        filename = f"{course.name}_all_export.xlsx"
+    
+    # Build data for export
+    data = []
+    for p in participants:
+        row = {
+            'Role': p.role,
+            'Email': p.email,
+            'First Name': p.first_name or '',
+            'Last Name': p.last_name or '',
+            'Status': p.status,
+            'RSVP Responded': 'Yes' if p.attending_responded else 'No'
+        }
+        
+        # Add custom question answers
+        for answer in p.answers:
+            row[answer.question.label] = answer.answer_text or ''
+        
+        # Add hotel information
+        if p.hotel_request:
+            row['Needs Hotel'] = 'Yes' if p.hotel_request.need_hotel else 'No'
+            if p.hotel_request.need_hotel:
+                nights = []
+                if p.hotel_request.night1:
+                    nights.append(str(course.hotel_night1))
+                if p.hotel_request.night2:
+                    nights.append(str(course.hotel_night2))
+                if p.hotel_request.night3:
+                    nights.append(str(course.hotel_night3))
+                row['Hotel Nights'] = ', '.join(nights) if nights else 'None selected'
+        else:
+            row['Needs Hotel'] = 'Not answered'
+            row['Hotel Nights'] = ''
+        
+        data.append(row)
+    
+    # Create Excel file
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False, sheet_name='Participants')
+    output.seek(0)
+    
+    return send_file(
+        output,
+        mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        as_attachment=True,
+        download_name=filename
+    )
+
+# ============================================
+# EMAIL SENDING ROUTES
+# ============================================
+
+@app.route('/send-initial-rsvp/<int:course_id>', methods=['POST'])
+@login_required
+def send_initial_rsvp(course_id):
+    course = Course.query.get_or_404(course_id)
+    participants = Participant.query.filter_by(course_id=course_id).all()
+    
+    count = 0
+    for participant in participants:
+        if not participant.attending_responded:
+            send_rsvp_email(participant, course)
+            count += 1
+    
+    return redirect(url_for('course_detail', course_id=course_id, message=f'RSVP emails sent to {count} participants'))
+
+
+@app.route('/send-reminders/<int:course_id>', methods=['POST'])
+@login_required
+def send_reminders(course_id):
+    course = Course.query.get_or_404(course_id)
+    participants = Participant.query.filter_by(course_id=course_id, status='INVITED').all()
+    
+    count = 0
+    for participant in participants:
+        if not participant.attending_responded:
+            send_rsvp_email(participant, course)
+            count += 1
+    
+    return redirect(url_for('course_detail', course_id=course_id, message=f'Reminder emails sent to {count} participants'))
+
+
+# ============================================
+# PARTICIPANT-FACING ROUTES (RSVP)
+# ============================================
+
+@app.route('/rsvp/<token>')
+def rsvp(token):
+    participant = Participant.query.filter_by(token=token).first_or_404()
+    course = participant.course
+    attending = request.args.get('attending')
+    
+    if attending == 'yes':
+        participant.status = 'ATTENDING'
+        participant.attending_responded = True
+        db.session.commit()
+        
+        # Send info form email
+        send_info_form_email(participant, course)
+        
+        return render_template('rsvp_response.html', course=course, attending=True)
+    
+    elif attending == 'no':
+        participant.status = 'NOT_ATTENDING'
+        participant.attending_responded = True
+        db.session.commit()
+        
+        return render_template('rsvp_response.html', course=course, attending=False)
+    
+    return "Invalid RSVP response", 400
+
+# ============================================
+# PARTICIPANT INFO FORM AND FILE UPLOAD
+# ============================================
+
+@app.route('/info-form/<token>', methods=['GET', 'POST'])
+def info_form(token):
+    participant = Participant.query.filter_by(token=token).first_or_404()
+    course = participant.course
+    
+    if request.method == 'POST':
+        participant.first_name = request.form.get('first_name')
+        participant.last_name = request.form.get('last_name')
+        
+        # Save custom question answers
+        for question in course.questions:
+            answer_text = request.form.get(f'q_{question.id}')
+            existing_answer = ParticipantAnswer.query.filter_by(
+                participant_id=participant.id, 
+                question_id=question.id
+            ).first()
+            
+            if answer_text:
+                if existing_answer:
+                    existing_answer.answer_text = answer_text
+                else:
+                    answer = ParticipantAnswer(
+                        participant_id=participant.id,
+                        question_id=question.id,
+                        answer_text=answer_text
+                    )
+                    db.session.add(answer)
+        
+        # Handle hotel request
+        need_hotel = request.form.get('need_hotel') == 'yes'
+        if need_hotel:
+            hotel_request, created = HotelRequest.get_or_create(participant.id)
+            hotel_request.need_hotel = True
+            hotel_request.night1 = 'night1' in request.form
+            hotel_request.night2 = 'night2' in request.form
+            hotel_request.night3 = 'night3' in request.form
+        else:
+            if hasattr(participant, 'hotel_request') and participant.hotel_request:
+                db.session.delete(participant.hotel_request)
+        
+        # Handle file uploads
+        files = request.files.getlist('files')
+        for file in files:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{participant.id}_{filename}")
+                file.save(filepath)
+
+  # Handle file uploads
+        files = request.files.getlist('files')
+        for file in files:
+            if file and file.filename:
+                filename = secure_filename(file.filename)
+                unique_filename = f"{participant.id}_{filename}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+                file.save(filepath)
+                
+                # Save file reference to database
+                participant_file = ParticipantFile(
+                    participant_id=participant.id,
+                    filename=filename,
+                    filepath=filepath,
+                    file_size=os.path.getsize(filepath),
+                    mime_type=file.content_type
+                )
+                db.session.add(participant_file)
+
+db.session.commit()
+        
+        # Send hotel finalization email if hotel was requested
+        if need_hotel:
+            send_hotel_finalization_email(participant, course)
+            return render_template('hotel_finalized.html', course=course, participant=participant)
+        
+        # Fixed: Use render_template instead of redirect
+        return render_template('rsvp_response.html', course=course, attending=True)
+    
+    return render_template('info_form.html', course=course, participant=participant)
+
+

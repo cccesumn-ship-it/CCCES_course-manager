@@ -1,65 +1,125 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Information form</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complete Your Information - {{ course.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<h1>Information for {{ course.name }}</h1>
-<p>Participant: {{ participant.first_name }} {{ participant.last_name }} ({{ participant.email }})</p>
+    <div class="container">
+        <h1>📝 Complete Your Information</h1>
+        
+        <div class="card">
+            <h3>{{ course.name }}</h3>
+            <p><strong>📅 Dates:</strong> {{ course.start_date }} to {{ course.end_date }}</p>
+        </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <ul>
-      {% for cat, msg in messages %}
-        <li><strong>{{ cat }}:</strong> {{ msg }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
+        {% if message %}
+        <div class="alert alert-success">{{ message }}</div>
+        {% endif %}
 
-<form method="post">
-  <h2>Questions</h2>
-  {% for q in questions %}
-    <div>
-      <label>
-        {{ q.label }}{% if q.required %} *{% endif %}<br>
-        <input type="text" name="q_{{ q.id }}" value="{{ answers_map.get(q.id, '') }}">
-      </label>
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" enctype="multipart/form-data">
+            <h2>Personal Information</h2>
+            
+            <label for="first_name">First Name: *</label>
+            <input type="text" id="first_name" name="first_name" value="{{ participant.first_name or '' }}" required>
+
+            <label for="last_name">Last Name: *</label>
+            <input type="text" id="last_name" name="last_name" value="{{ participant.last_name or '' }}" required>
+
+            <label for="email">Email: *</label>
+            <input type="email" id="email" name="email" value="{{ participant.email }}" readonly style="background: #f0f0f0;">
+
+            {% if course.questions %}
+            <h2>Additional Information</h2>
+            {% for question in course.questions %}
+            <label for="q_{{ question.id }}">
+                {{ question.label }}{% if question.required %} *{% endif %}
+            </label>
+            
+            {% set answer = participant.answers|selectattr('question_id', 'equalto', question.id)|first %}
+            
+            {% if question.field_type == 'textarea' %}
+            <textarea id="q_{{ question.id }}" name="q_{{ question.id }}" {% if question.required %}required{% endif %}>{{ answer.answer_text if answer else '' }}</textarea>
+            
+            {% elif question.field_type == 'email' %}
+            <input type="email" id="q_{{ question.id }}" name="q_{{ question.id }}" value="{{ answer.answer_text if answer else '' }}" {% if question.required %}required{% endif %}>
+            
+            {% elif question.field_type == 'date' %}
+            <input type="date" id="q_{{ question.id }}" name="q_{{ question.id }}" value="{{ answer.answer_text if answer else '' }}" {% if question.required %}required{% endif %}>
+            
+            {% else %}
+            <input type="text" id="q_{{ question.id }}" name="q_{{ question.id }}" value="{{ answer.answer_text if answer else '' }}" {% if question.required %}required{% endif %}>
+            {% endif %}
+            
+            {% endfor %}
+            {% endif %}
+ {% if course.hotel_night1 or course.hotel_night2 or course.hotel_night3 %}
+            <h2>🏨 Hotel Accommodation</h2>
+            
+            <label>Do you need hotel accommodation?</label>
+            <div style="margin-bottom: 20px;">
+                <label style="display: inline-block; margin-right: 20px;">
+                    <input type="radio" name="need_hotel" value="yes" {% if participant.hotel_request and participant.hotel_request.need_hotel %}checked{% endif %} required> Yes
+                </label>
+                <label style="display: inline-block;">
+                    <input type="radio" name="need_hotel" value="no" {% if participant.hotel_request and participant.hotel_request.need_hotel == False %}checked{% endif %} required> No
+                </label>
+            </div>
+
+            <div id="hotel-nights" style="{% if not participant.hotel_request or not participant.hotel_request.need_hotel %}display: none;{% endif %}">
+                <label>Select nights you need accommodation:</label>
+                
+                {% if course.hotel_night1 %}
+                <label style="display: block; margin-bottom: 10px;">
+                    <input type="checkbox" name="night1" {% if participant.hotel_request and participant.hotel_request.night1 %}checked{% endif %}>
+                    {{ course.hotel_night1 }}
+                </label>
+                {% endif %}
+                
+                {% if course.hotel_night2 %}
+                <label style="display: block; margin-bottom: 10px;">
+                    <input type="checkbox" name="night2" {% if participant.hotel_request and participant.hotel_request.night2 %}checked{% endif %}>
+                    {{ course.hotel_night2 }}
+                </label>
+                {% endif %}
+                
+                {% if course.hotel_night3 %}
+                <label style="display: block; margin-bottom: 10px;">
+                    <input type="checkbox" name="night3" {% if participant.hotel_request and participant.hotel_request.night3 %}checked{% endif %}>
+                    {{ course.hotel_night3 }}
+                </label>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <h2>📎 Upload Files (Optional)</h2>
+            <p style="color: #666; margin-bottom: 15px;">You can upload documents, forms, or other files here. Multiple files are allowed.</p>
+            <label for="files">Select files to upload:</label>
+            <input type="file" id="files" name="files" multiple>
+
+            <input type="submit" value="Save Information">
+        </form>
+
+        <script>
+            // Show/hide hotel nights based on selection
+            document.querySelectorAll('input[name="need_hotel"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const hotelNights = document.getElementById('hotel-nights');
+                    if (this.value === 'yes') {
+                        hotelNights.style.display = 'block';
+                    } else {
+                        hotelNights.style.display = 'none';
+                    }
+                });
+            });
+        </script>
     </div>
-  {% endfor %}
-
-  <h2 id="hotel">Hotel</h2>
-  {% set hr = hotel %}
-  <p>Do you need a hotel room?</p>
-  <label><input type="radio" name="need_hotel" value="yes"
-    {% if hr and hr.need_hotel %}checked{% endif %}> Yes</label>
-  <label><input type="radio" name="need_hotel" value="no"
-    {% if hr and hr.need_hotel is not none and not hr.need_hotel %}checked{% endif %}> No</label>
-
-  <div>
-    <p>Select nights (if Yes):</p>
-    {% if course.hotel_night1 %}
-      <label>
-        <input type="checkbox" name="night1" {% if hr and hr.night1 %}checked{% endif %}>
-        Night 1 ({{ course.hotel_night1 }})
-      </label><br>
-    {% endif %}
-    {% if course.hotel_night2 %}
-      <label>
-        <input type="checkbox" name="night2" {% if hr and hr.night2 %}checked{% endif %}>
-        Night 2 ({{ course.hotel_night2 }})
-      </label><br>
-    {% endif %}
-    {% if course.hotel_night3 %}
-      <label>
-        <input type="checkbox" name="night3" {% if hr and hr.night3 %}checked{% endif %}>
-        Night 3 ({{ course.hotel_night3 }})
-      </label><br>
-    {% endif %}
-  </div>
-
-  <button type="submit">Save</button>
-</form>
-
 </body>
 </html>
+

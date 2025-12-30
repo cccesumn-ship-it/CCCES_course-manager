@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSVP Confirmation - {{ course.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .rsvp-container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        .attending-yes {
+            color: #28a745;
+        }
+        .attending-no {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="rsvp-container">
+        {% if attending %}
+        <div class="success-icon attending-yes">✅</div>
+        <h1>Thank You!</h1>
+        <p style="font-size: 1.2rem; color: #555; margin: 20px 0;">
+            You have confirmed your attendance for <strong>{{ course.name }}</strong>.
+        </p>
+        <div class="card" style="text-align: left; margin: 30px 0;">
+            <h3>📅 Course Details</h3>
+            <p><strong>Start Date:</strong> {{ course.start_date }}</p>
+            <p><strong>End Date:</strong> {{ course.end_date }}</p>
+        </div>
+        <div class="alert alert-info">
+            <strong>Next Step:</strong> Please check your email for a link to complete your information form.
+        </div>
+        {% else %}
+        <div class="success-icon attending-no">❌</div>
+        <h1>We're Sorry You Can't Make It</h1>
+        <p style="font-size: 1.2rem; color: #555; margin: 20px 0;">
+            You have declined the invitation for <strong>{{ course.name }}</strong>.
+        </p>
+        <p style="color: #666;">
+            We hope to see you at future events. If you change your mind, please contact the course administrator.
+        </p>
+        {% endif %}
+    </div>
+</body>
+</html>

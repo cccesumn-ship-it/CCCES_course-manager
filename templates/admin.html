@@ -1,101 +1,60 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <title>Admin - Courses</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Course Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<h1>Course Manager - Admin</h1>
+    <div class="container">
+        <div class="flex-between">
+            <h1>📚 Course Manager - Admin Dashboard</h1>
+            <a href="/logout" class="btn btn-secondary">Logout</a>
+        </div>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    <ul>
-      {% for cat, msg in messages %}
-        <li><strong>{{ cat }}:</strong> {{ msg }}</li>
-      {% endfor %}
-    </ul>
-  {% endif %}
-{% endwith %}
+        {% if message %}
+        <div class="alert alert-success">{{ message }}</div>
+        {% endif %}
 
-<h2>Create Course</h2>
-<form method="post" action="{{ url_for('create_course') }}">
-  <label>Name: <input type="text" name="name" required></label><br>
-  <label>Start date: <input type="date" name="start_date" required></label><br>
-  <label>End date: <input type="date" name="end_date" required></label><br>
-  <label>Hotel night 1: <input type="date" name="hotel_night1"></label><br>
-  <label>Hotel night 2: <input type="date" name="hotel_night2"></label><br>
-  <label>Hotel night 3: <input type="date" name="hotel_night3"></label><br>
-  <button type="submit">Create</button>
-</form>
+        <h2>➕ Create New Course</h2>
+        <form method="POST" action="/create-course">
+            <label for="name">Course Name:</label>
+            <input type="text" id="name" name="name" required>
 
-<hr>
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" required>
 
-<h2>Courses</h2>
-<ul>
-{% for c in courses %}
-  <li>
-    <a href="{{ url_for('course_detail', course_id=c.id) }}">{{ c.name }}</a>
-    ({{ c.start_date }} - {{ c.end_date }})
-  </li>
-{% endfor %}
-</ul>
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" required>
 
-{% if course %}
-<hr>
-<h2>Course: {{ course.name }}</h2>
+            <label for="hotel_night1">Hotel Night 1 (optional):</label>
+            <input type="date" id="hotel_night1" name="hotel_night1">
 
-<h3>Upload participants</h3>
-<form method="post" action="{{ url_for('upload_participants', course_id=course.id) }}" enctype="multipart/form-data">
-  <input type="file" name="file" required>
-  <button type="submit">Upload</button>
-  <p>CSV or Excel with at least a column named 'email'. Optional: 'first_name', 'last_name'.</p>
-</form>
+            <label for="hotel_night2">Hotel Night 2 (optional):</label>
+            <input type="date" id="hotel_night2" name="hotel_night2">
 
-<h3>Participants</h3>
-<table border="1" cellpadding="4">
-  <tr>
-    <th>Email</th><th>Name</th><th>Status</th>
-  </tr>
-  {% for p in participants %}
-  <tr>
-    <td>{{ p.email }}</td>
-    <td>{{ p.first_name }} {{ p.last_name }}</td>
-    <td>{{ p.status }}</td>
-  </tr>
-  {% endfor %}
-</table>
+            <label for="hotel_night3">Hotel Night 3 (optional):</label>
+            <input type="date" id="hotel_night3" name="hotel_night3">
 
-<form method="post" action="{{ url_for('send_initial', course_id=course.id) }}">
-  <button type="submit">Send initial RSVP emails</button>
-</form>
+            <input type="submit" value="Create Course">
+        </form>
 
-<h3>Custom Questions</h3>
-<table border="1" cellpadding="4">
-  <tr><th>Order</th><th>Label</th><th>Required</th></tr>
-  {% for q in questions %}
-  <tr>
-    <td>{{ q.order_index }}</td>
-    <td>{{ q.label }}</td>
-    <td>{{ 'Yes' if q.required else 'No' }}</td>
-  </tr>
-  {% endfor %}
-</table>
-
-<form method="post" action="{{ url_for('add_question', course_id=course.id) }}">
-  <h4>Add question</h4>
-  <label>Label: <input type="text" name="label" required></label><br>
-  <label>Required: <input type="checkbox" name="required" checked></label><br>
-  <label>Order: <input type="number" name="order_index" value="0"></label><br>
-  <button type="submit">Add question</button>
-</form>
-
-<h3>Hotel summary</h3>
-<a href="{{ url_for('hotel_summary', course_id=course.id) }}">View hotel summary</a>
-
-<h3>Export</h3>
-<a href="{{ url_for('export_excel', course_id=course.id) }}">Download Excel export</a>
-
-{% endif %}
-
+        <h2>📋 Existing Courses</h2>
+        <div class="course-list">
+            {% for course in courses %}
+            <div class="course-card">
+                <h3>{{ course.name }}</h3>
+                <p><strong>📅 Dates:</strong> {{ course.start_date }} to {{ course.end_date }}</p>
+                <p><strong>👥 Participants:</strong> {{ course.participants|selectattr('role', 'equalto', 'PARTICIPANT')|list|length }}</p>
+                <p><strong>👨‍🏫 Faculty:</strong> {{ course.participants|selectattr('role', 'equalto', 'FACULTY')|list|length }}</p>
+                <div class="action-buttons mt-20">
+                    <a href="/course/{{ course.id }}" class="btn btn-small">View Details</a>
+                    <a href="/delete-course/{{ course.id }}" class="btn btn-danger btn-small" onclick="return confirm('Delete this course?')">Delete</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
 </body>
 </html>

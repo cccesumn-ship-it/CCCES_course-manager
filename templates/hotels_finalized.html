@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hotel Booking Finalized - {{ course.name }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        .hotel-container {
+            max-width: 600px;
+            width: 100%;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            padding: 40px;
+            text-align: center;
+        }
+        .hotel-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="hotel-container">
+        <div class="hotel-icon">🏨</div>
+        <h1>Hotel Information Finalized</h1>
+        <p style="font-size: 1.2rem; color: #555; margin: 20px 0;">
+            Your hotel accommodation preferences for <strong>{{ course.name }}</strong> have been finalized.
+        </p>
+        
+        <div class="card" style="text-align: left; margin: 30px 0;">
+            <h3>Your Hotel Request:</h3>
+            {% if participant.hotel_request and participant.hotel_request.need_hotel %}
+            <p><strong>✅ Hotel accommodation requested</strong></p>
+            <p><strong>Nights:</strong></p>
+            <ul style="margin-left: 20px;">
+                {% if participant.hotel_request.night1 %}
+                <li>{{ course.hotel_night1 }}</li>
+                {% endif %}
+                {% if participant.hotel_request.night2 %}
+                <li>{{ course.hotel_night2 }}</li>
+                {% endif %}
+                {% if participant.hotel_request.night3 %}
+                <li>{{ course.hotel_night3 }}</li>
+                {% endif %}
+            </ul>
+            {% else %}
+            <p><strong>❌ No hotel accommodation needed</strong></p>
+            {% endif %}
+        </div>
+
+        <div class="alert alert-success">
+            <strong>Thank you!</strong> Your hotel preferences have been recorded and cannot be changed. 
+            If you need to make changes, please contact the course administrator.
+        </div>
+    </div>
+</body>
+</html>
