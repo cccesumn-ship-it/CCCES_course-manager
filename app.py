@@ -389,13 +389,7 @@ def info_form(token):
             if hasattr(participant, 'hotel_request') and participant.hotel_request:
                 db.session.delete(participant.hotel_request)
         
-        # Handle file uploads
-        files = request.files.getlist('files')
-        for file in files:
-            if file and file.filename:
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], f"{participant.id}_{filename}")
-                file.save(filepath)
+        
 
   # Handle file uploads
         files = request.files.getlist('files')
@@ -406,7 +400,6 @@ def info_form(token):
                 filepath = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
                 file.save(filepath)
                 
-                # Save file reference to database
                 participant_file = ParticipantFile(
                     participant_id=participant.id,
                     filename=filename,
@@ -415,17 +408,13 @@ def info_form(token):
                     mime_type=file.content_type
                 )
                 db.session.add(participant_file)
-
-db.session.commit()
         
-        # Send hotel finalization email if hotel was requested
+        db.session.commit()
+        
         if need_hotel:
             send_hotel_finalization_email(participant, course)
             return render_template('hotel_finalized.html', course=course, participant=participant)
         
-        # Fixed: Use render_template instead of redirect
         return render_template('rsvp_response.html', course=course, attending=True)
     
     return render_template('info_form.html', course=course, participant=participant)
-
-
