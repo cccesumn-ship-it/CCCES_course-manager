@@ -13,6 +13,9 @@ from flask import (
 from werkzeug.utils import secure_filename
 from io import BytesIO
 import pandas as pd
+import sys  # <--- add this
+
+print("PYTHON VERSION AT RUNTIME:", sys.version)  # <--- add this
 
 from models import (
     db,
@@ -33,8 +36,15 @@ from email_utils import (
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-key")
 db_url = os.environ.get("DATABASE_URL", "sqlite:///local.db")
+
+# Normalize old postgres:// to postgresql://
 if db_url.startswith("postgres://"):
     db_url = db_url.replace("postgres://", "postgresql://", 1)
+
+# If using PostgreSQL, force psycopg v3 driver
+if db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+
 app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
