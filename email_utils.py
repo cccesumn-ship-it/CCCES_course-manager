@@ -237,9 +237,6 @@ def send_hotel_finalization_email(participant, course):
 # ============================================
 
 def send_file_upload_email(participant, course, filename):
-    """
-    Send email confirming file upload
-    """
     subject = f"File Uploaded Successfully - {course.name}"
     
     html_content = f"""
@@ -247,24 +244,11 @@ def send_file_upload_email(participant, course, filename):
     <html>
     <head>
         <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin
-def send_file_upload_email(participant, course, filename):
-    """
-    Send email confirming file upload
-    """
-    subject = f"File Uploaded Successfully - {course.name}"
-    
-    html_content = f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .info-box { background: white; padding: 20px; border-left: 4px solid #28a745; margin: 20px 0; }
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+            .info-box {{ background: white; padding: 20px; border-left: 4px solid #28a745; margin: 20px 0; }}
         </style>
     </head>
     <body>
