@@ -13,9 +13,9 @@ from flask import (
 from werkzeug.utils import secure_filename
 from io import BytesIO
 import pandas as pd
-import sys  # <--- add this
+import sys
 
-print("PYTHON VERSION AT RUNTIME:", sys.version)  # <--- add this
+print("PYTHON VERSION AT RUNTIME:", sys.version)
 
 from models import (
     db,
@@ -35,6 +35,8 @@ from email_utils import (
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-key")
+
+# Configure database URL and driver
 db_url = os.environ.get("DATABASE_URL", "sqlite:///local.db")
 
 # Normalize old postgres:// to postgresql://
@@ -75,16 +77,7 @@ def admin_login():
             resp.set_cookie("admin_pass", ADMIN_PASSWORD, httponly=True)
             return resp
         flash("Wrong password", "error")
-    return render_template(
-        "message.html",
-        title="Admin Login",
-        body="""
-    <form method="post">
-      <label>Password: <input type="password" name="password"></label>
-      <button type="submit">Login</button>
-    </form>
-    """,
-    )
+    return render_template("login.html")
 
 
 @app.route("/")
@@ -409,9 +402,10 @@ def export_excel(course_id):
     )
 
 
-if __name__ == "__main__":
-    app.run(debug=True)
-
-# Create tables at import time (once) using app context
+# Create tables once at import time
 with app.app_context():
     db.create_all()
+
+
+if __name__ == "__main__":
+    app.run(debug=True)
