@@ -67,11 +67,6 @@ def admin_required(view):
     return wrapper
 
 
-@app.before_first_request
-def create_tables():
-    db.create_all()
-
-
 @app.route("/admin-login", methods=["GET", "POST"])
 def admin_login():
     if request.method == "POST":
@@ -416,3 +411,7 @@ def export_excel(course_id):
 
 if __name__ == "__main__":
     app.run(debug=True)
+
+# Create tables at import time (once) using app context
+with app.app_context():
+    db.create_all()
