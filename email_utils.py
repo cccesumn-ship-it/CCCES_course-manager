@@ -61,14 +61,14 @@ def send_rsvp_email(participant, course):
     <html>
     <head>
         <style>
-            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
-            .button { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; }
-            .btn-yes { background: #28a745; color: white; }
-            .btn-no { background: #dc3545; color: white; }
-            .info-box { background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0; }
+            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
+            .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+            .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }}
+            .content {{ background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }}
+            .button {{ display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 5px; font-weight: bold; font-size: 16px; }}
+            .btn-yes {{ background: #28a745; color: white; }}
+            .btn-no {{ background: #dc3545; color: white; }}
+            .info-box {{ background: white; padding: 20px; border-left: 4px solid #667eea; margin: 20px 0; }}
         </style>
     </head>
     <body>
@@ -99,7 +99,6 @@ def send_rsvp_email(participant, course):
     """
     
     return send_email(participant.email, subject, html_content)
-
 
 # ============================================
 # INFO FORM EMAIL
