@@ -33,3 +33,6 @@ instance/
 
 # Database
 *.db
+
+# Render
+.render/

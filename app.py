@@ -1,6 +1,11 @@
+import os
+from datetime import datetime
+from functools import wraps
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify
+from models import db, Course, Person, CustomQuestion, Answer, HotelRequest, UploadedFile, EmailTemplate, Admin
 from flask_mail import Mail
-from config import Config
+from werkzeug.utils import secure_filename
+from config import config
 from models import db, Course, Person, CustomQuestion, Answer, HotelRequest, UploadedFile, EmailTemplate
 from email_service import mail, send_rsvp_email, send_info_form_email, send_info_reminder_email, \
     send_hotel_request_email, send_hotel_reminder_email, send_hotel_final_notice_email, \
@@ -8,28 +13,44 @@ from email_service import mail, send_rsvp_email, send_info_form_email, send_info
     send_bulk_hotel_request_emails, process_info_reminders, process_hotel_reminders
 from utils import allowed_file, generate_hotel_summary, export_to_excel, parse_uploaded_csv, \
     initialize_default_email_templates, get_person_statistics, save_uploaded_file
-from datetime import datetime
-from werkzeug.utils import secure_filename
-from functools import wraps
-import os
 
-# Initialize Flask app
-app = Flask(__name__)
-app.config.from_object(Config)
 
-# Initialize extensions
-db.init_app(app)
-mail.init_app(app)
+def create_app(config_name=None):
+    """Application factory pattern for Flask"""
+    
+    # Determine configuration
+    if config_name is None:
+        config_name = os.environ.get('FLASK_CONFIG', 'default')
+    
+    # Create Flask app
+    app = Flask(__name__)
+    
+    # Load configuration
+    app.config.from_object(config[config_name])
+    config[config_name].init_app(app)
+    
+    # Initialize extensions
+    db.init_app(app)
+    mail.init_app(app)
+    
+    # Create upload folder
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+    
+    # Create database tables and initialize templates
+    with app.app_context():
+        try:
+            db.create_all()
+            initialize_default_email_templates()
+            print("✅ Database initialized")
+            print("✅ Email templates initialized")
+        except Exception as e:
+            print(f"⚠️  Database initialization note: {e}")
+    
+    return app
 
-# Create upload folder
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
-# Create database tables and initialize templates
-with app.app_context():
-    db.create_all()
-    initialize_default_email_templates()
-    print("✅ Database initialized")
-    print("✅ Email templates initialized")
+# Create the app instance
+app = create_app()
 
 
 # ============================================
@@ -51,6 +72,9 @@ def login_required(f):
 # ADMIN ROUTES - AUTHENTICATION
 # ============================================
 
+from models import Admin
+from werkzeug.security import check_password_hash
+
 @app.route('/admin/login', methods=['GET', 'POST'])
 def admin_login():
     """Admin login page"""
@@ -58,9 +82,13 @@ def admin_login():
         username = request.form.get('username')
         password = request.form.get('password')
         
-        if username == app.config['ADMIN_USERNAME'] and password == app.config['ADMIN_PASSWORD']:
+        # Query admin from database
+        admin = Admin.query.filter_by(username=username).first()
+        
+        if admin and check_password_hash(admin.password_hash, password):
             session['admin_logged_in'] = True
             session['admin_username'] = username
+            session['admin_id'] = admin.id
             flash('Login successful!', 'success')
             return redirect(url_for('admin_dashboard'))
         else:
@@ -1137,10 +1165,30 @@ def init_db_command():
 
 @app.cli.command('create-admin')
 def create_admin_command():
-    """Display admin credentials from config"""
-    print(f"Admin Username: {app.config['ADMIN_USERNAME']}")
-    print(f"Admin Password: {app.config['ADMIN_PASSWORD']}")
-    print("You can change these in config.py or .env file")
+    """Create a new admin user"""
+    from werkzeug.security import generate_password_hash
+    from getpass import getpass
+    
+    username = input("Enter admin username: ")
+    email = input("Enter admin email: ")
+    password = getpass("Enter admin password: ")
+    
+    # Check if admin exists
+    existing = Admin.query.filter_by(username=username).first()
+    if existing:
+        print(f"❌ Admin with username '{username}' already exists!")
+        return
+    
+    admin = Admin(
+        username=username,
+        email=email,
+        password_hash=generate_password_hash(password)
+    )
+    
+    db.session.add(admin)
+    db.session.commit()
+    
+    print(f"✅ Admin user '{username}' created successfully!")
 
 
 @app.cli.command('run-reminders')
@@ -1178,6 +1226,9 @@ def test_email_command():
 # ============================================
 
 if __name__ == '__main__':
-    # Run in debug mode for development
-    # For production, use a production WSGI server like Gunicorn
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    # Get configuration from environment
+    debug = os.environ.get('FLASK_DEBUG', 'True').lower() in ['true', '1', 'yes']
+    host = os.environ.get('FLASK_HOST', '0.0.0.0')
+    port = int(os.environ.get('FLASK_PORT', 5000))
+    
+    app.run(debug=debug, host=host, port=port)
