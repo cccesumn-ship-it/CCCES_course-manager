@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Questions - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-question-circle"></i> Manage Custom Questions</h2>
+                <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Course
+                </a>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Course: {{ course.name }}</h5>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>About Custom Questions:</strong>
+                Custom questions will appear on the Information Form for participants who have RSVP'd as attending.
+                You can add, edit, reorder, and delete questions. Changes will only affect future form submissions.
+            </div>
+            
+            <!-- Add New Question -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-plus"></i> Add New Question</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_question', course_id=course.id) }}">
+                        <div class="mb-3">
+                            <label for="question_text" class="form-label">Question Text *</label>
+                            <textarea class="form-control" 
+                                      id="question_text" 
+                                      name="question_text" 
+                                      rows="2" 
+                                      required
+                                      placeholder="Enter your question here..."></textarea>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="question_type" class="form-label">Question Type *</label>
+                                <select class="form-select" id="question_type" name="question_type" required>
+                                    <option value="TEXT">Short Text</option>
+                                    <option value="TEXTAREA">Long Text (Paragraph)</option>
+                                    <option value="SELECT">Dropdown (Multiple Choice)</option>
+                                    <option value="RADIO">Radio Buttons</option>
+                                    <option value="CHECKBOX">Checkboxes (Multiple Select)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <div class="form-check form-switch mt-4">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           id="is_required" 
+                                           name="is_required"
+                                           checked>
+                                    <label class="form-check-label" for="is_required">
+                                        Required Question
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3" id="options_container" style="display: none;">
+                            <label for="options" class="form-label">
+                                Options (one per line) *
+                            </label>
+                            <textarea class="form-control" 
+                                      id="options" 
+                                      name="options" 
+                                      rows="4"
+                                      placeholder="Option 1&#10;Option 2&#10;Option 3"></textarea>                            
+
+<div class="form-text">
+                                Enter each option on a new line. Only required for dropdown, radio, and checkbox types.
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-plus"></i> Add Question
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Existing Questions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-list"></i> Existing Questions ({{ questions|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if questions %}
+                    <div id="questions-list">
+                        {% for question in questions %}
+                        <div class="card mb-3 question-item" data-question-id="{{ question.id }}">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-secondary me-2">Order: {{ question.order_index }}</span>
+                                            <span class="badge bg-primary me-2">{{ question.question_type }}</span>
+                                            {% if question.is_required %}
+                                            <span class="badge bg-danger">Required</span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <h6 class="mb-2">{{ question.question_text }}</h6>
+                                        
+                                        {% if question.options %}
+                                        <small class="text-muted">
+                                            <strong>Options:</strong> 
+                                            {% for option in question.options.split('\n') %}
+                                                <span class="badge bg-light text-dark">{{ option }}</span>
+                                            {% endfor %}
+                                        </small>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div class="btn-group-vertical ms-3">
+                                        <!-- Move Up -->
+                                        {% if not loop.first %}
+                                        <form method="POST" 
+                                              action="{{ url_for('move_question_up', question_id=question.id) }}"
+                                              style="display: inline;">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    title="Move Up">
+                                                <i class="fas fa-arrow-up"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        
+                                        <!-- Move Down -->
+                                        {% if not loop.last %}
+                                        <form method="POST" 
+                                              action="{{ url_for('move_question_down', question_id=question.id) }}"
+                                              style="display: inline;">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-outline-secondary"
+                                                    title="Move Down">
+                                                <i class="fas fa-arrow-down"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        
+                                        <!-- Edit -->
+                                        <button type="button" 
+                                                class="btn btn-sm btn-outline-primary"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editModal{{ question.id }}"
+                                                title="Edit">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        
+                                        <!-- Delete -->
+                                        <form method="POST"                                             
+
+ action="{{ url_for('delete_question', question_id=question.id) }}"
+                                              style="display: inline;">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Delete this question? This cannot be undone.')"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Edit Modal for this question -->
+                        <div class="modal fade" id="editModal{{ question.id }}" tabindex="-1">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <form method="POST" action="{{ url_for('edit_question', question_id=question.id) }}">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Edit Question</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <div class="mb-3">
+                                                <label class="form-label">Question Text *</label>
+                                                <textarea class="form-control" 
+                                                          name="question_text" 
+                                                          rows="2" 
+                                                          required>{{ question.question_text }}</textarea>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Question Type *</label>
+                                                <select class="form-select" name="question_type" required>
+                                                    <option value="TEXT" {% if question.question_type == 'TEXT' %}selected{% endif %}>Short Text</option>
+                                                    <option value="TEXTAREA" {% if question.question_type == 'TEXTAREA' %}selected{% endif %}>Long Text</option>
+                                                    <option value="SELECT" {% if question.question_type == 'SELECT' %}selected{% endif %}>Dropdown</option>
+                                                    <option value="RADIO" {% if question.question_type == 'RADIO' %}selected{% endif %}>Radio Buttons</option>
+                                                    <option value="CHECKBOX" {% if question.question_type == 'CHECKBOX' %}selected{% endif %}>Checkboxes</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div class="mb-3">
+                                                <label class="form-label">Options (one per line)</label>
+                                                <textarea class="form-control" 
+                                                          name="options" 
+                                                          rows="4">{{ question.options or '' }}</textarea>
+                                            </div>
+                                            
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input" 
+                                                       type="checkbox" 
+                                                       name="is_required"
+                                                       {% if question.is_required %}checked{% endif %}>
+                                                <label class="form-check-label">Required Question</label>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                            <button type="submit" class="btn btn-primary">
+                                                <i class="fas fa-save"></i> Save Changes
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}                    
+
+<div class="alert alert-info text-center mb-0">
+                        <i class="fas fa-info-circle"></i> No custom questions added yet. Add your first question above.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    // Show/hide options field based on question type
+    document.getElementById('question_type').addEventListener('change', function() {
+        const optionsContainer = document.getElementById('options_container');
+        const optionsField = document.getElementById('options');
+        const requiresOptions = ['SELECT', 'RADIO', 'CHECKBOX'].includes(this.value);
+        
+        if (requiresOptions) {
+            optionsContainer.style.display = 'block';
+            optionsField.required = true;
+        } else {
+            optionsContainer.style.display = 'none';
+            optionsField.required = false;
+            optionsField.value = '';
+        }
+    });
+    
+    // Trigger on page load
+    document.getElementById('question_type').dispatchEvent(new Event('change'));
+    
+    // Form validation
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function(e) {
+            const questionType = this.querySelector('[name="question_type"]');
+            const options = this.querySelector('[name="options"]');
+            
+            if (questionType && options) {
+                const requiresOptions = ['SELECT', 'RADIO', 'CHECKBOX'].includes(questionType.value);
+                
+                if (requiresOptions && !options.value.trim()) {
+                    e.preventDefault();
+                    alert('Please provide options for this question type.');
+                    options.focus();
+                    return false;
+                }
+            }
+        });
+    });
+</script>
+
+<style>
+    .question-item {
+        transition: all 0.3s ease;
+    }
+    
+    .question-item:hover {
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-group-vertical .btn {
+        margin-bottom: 2px;
+    }
+</style>
+{% endblock %}

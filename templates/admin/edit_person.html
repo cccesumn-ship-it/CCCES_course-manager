@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Person - {{ person.first_name }} {{ person.last_name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-user-edit"></i> Edit Person</h2>
+                <a href="{{ url_for('course_detail', course_id=person.course_id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Course
+                </a>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Course: {{ person.course.name }}</h5>
+                </div>
+            </div>
+            
+            <!-- Edit Person Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Person Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('edit_person', person_id=person.id) }}">
+                        
+                        <!-- First Name -->
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">
+                                <i class="fas fa-user"></i> First Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   value="{{ person.first_name }}"
+                                   required>
+                        </div>
+                        
+                        <!-- Last Name -->
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">
+                                <i class="fas fa-user"></i> Last Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name" 
+                                   value="{{ person.last_name }}"
+                                   required>
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email Address *
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   value="{{ person.email }}"
+                                   required>
+                            <div class="form-text">
+                                Changing the email will generate a new unique token
+                            </div>
+                        </div>
+                        
+                        <!-- Role -->
+                        <div class="mb-3">
+                            <label for="role" class="form-label">
+                                <i class="fas fa-user-tag"></i> Role *
+                            </label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="PARTICIPANT" {% if person.role == 'PARTICIPANT' %}selected{% endif %}>
+                                    Participant
+                                </option>
+                                <option value="FACULTY" {% if person.role == 'FACULTY' %}selected{% endif %}>
+                                    Faculty
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <!-- Status -->
+                        <div class="mb-4">
+                            <label for="status" class="form-label">
+                                <i class="fas fa-flag"></i> Status *
+                            </label>                            
+
+<select class="form-select" id="status" name="status" required>
+                                <option value="NO_RESPONSE" {% if person.status == 'NO_RESPONSE' %}selected{% endif %}>
+                                    No Response
+                                </option>
+                                <option value="ATTENDING" {% if person.status == 'ATTENDING' %}selected{% endif %}>
+                                    Attending
+                                </option>
+                                <option value="NOT_ATTENDING" {% if person.status == 'NOT_ATTENDING' %}selected{% endif %}>
+                                    Not Attending
+                                </option>
+                            </select>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Current Status Display -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle"></i> Current Status:</h6>
+                            <ul class="mb-0">
+                                <li>
+                                    <strong>RSVP Status:</strong> 
+                                    {% if person.status == 'ATTENDING' %}
+                                        <span class="badge bg-success">Attending</span>
+                                    {% elif person.status == 'NOT_ATTENDING' %}
+                                        <span class="badge bg-danger">Not Attending</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">No Response</span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    <strong>Info Form:</strong> 
+                                    {% if person.info_completed %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Completed</span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    <strong>Hotel Request:</strong> 
+                                    {% if person.hotel_request and person.hotel_request.completed %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning">Not Completed</span>
+                                    {% endif %}
+                                </li>
+                                <li>
+                                    <strong>Unique Token:</strong> 
+                                    <code>{{ person.token }}</code>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('view_person', person_id=person.id) }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-2">
+                            <form method="POST" action="{{ url_for('resend_rsvp_email', person_id=person.id) }}">
+                                <button type="submit" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-envelope"></i> Resend RSVP Email
+                                </button>
+                            </form>
+                        </div>
+                        
+                        {% if person.status == 'ATTENDING' %}                        
+
+<div class="col-md-6 mb-2">
+                            <form method="POST" action="{{ url_for('resend_info_email', person_id=person.id) }}">
+                                <button type="submit" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-file-alt"></i> Resend Info Form Email
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-6 mb-2">
+                            <form method="POST" action="{{ url_for('resend_hotel_email', person_id=person.id) }}">
+                                <button type="submit" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-hotel"></i> Resend Hotel Request Email
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-6 mb-2">
+                            <a href="{{ url_for('view_person', person_id=person.id) }}" 
+                               class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-eye"></i> View Full Details
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Danger Zone -->
+            <div class="card mt-4 border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Danger Zone</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Deleting this person will permanently remove all their data including RSVP responses, 
+                        info form submissions, hotel requests, and uploaded files. This action cannot be undone.
+                    </p>
+                    <form method="POST" 
+                          action="{{ url_for('delete_person', person_id=person.id) }}" 
+                          onsubmit="return confirm('Are you absolutely sure you want to delete {{ person.first_name }} {{ person.last_name }}? This action cannot be undone!');">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Delete Person
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    // Email validation
+    document.getElementById('email').addEventListener('blur', function() {
+        const email = this.value;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailPattern.test(email)) {
+            alert('Please enter a valid email address');
+            this.focus();
+        }
+    });
+    
+    // Status change warning
+    const originalStatus = "{{ person.status }}";
+    document.getElementById('status').addEventListener('change', function() {
+        const newStatus = this.value;
+        
+        if (originalStatus === 'ATTENDING' && newStatus !== 'ATTENDING') {
+            if (!confirm('Changing status from ATTENDING will not delete existing info form and hotel request data. Continue?')) {
+                this.value = originalStatus;
+            }
+        }
+    });
+</script>
+{% endblock %}

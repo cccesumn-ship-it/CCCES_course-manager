@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Course Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                <a href="{{ url_for('create_course') }}" class="btn btn-gradient">
+                    <i class="fas fa-plus"></i> Create New Course
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    {% if courses %}
+    <div class="row">
+        {% for course in courses %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ course.name }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <i class="fas fa-calendar"></i> 
+                        <strong>Start:</strong> {{ course.start_date.strftime('%B %d, %Y') }}
+                    </p>
+                    <p class="mb-3">
+                        <i class="fas fa-calendar-check"></i> 
+                        <strong>End:</strong> {{ course.end_date.strftime('%B %d, %Y') }}
+                    </p>
+                    
+                    {% set stats = course_stats[course.id] %}
+                    
+                    <div class="row text-center mb-3">
+                        <div class="col-4">
+                            <div class="stat-box">
+                                <h4 class="text-primary mb-0">{{ stats.total_invited }}</h4>
+                                <small class="text-muted">Invited</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-box">
+                                <h4 class="text-success mb-0">{{ stats.total_attending }}</h4>
+                                <small class="text-muted">Attending</small>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-box">
+                                <h4 class="text-danger mb-0">{{ stats.total_not_attending }}</h4>
+                                <small class="text-muted">Not Attending</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="progress mb-2" style="height: 25px;">
+                        {% set attending_pct = (stats.total_attending / stats.total_invited * 100) if stats.total_invited > 0 else 0 %}
+                        {% set not_attending_pct = (stats.total_not_attending / stats.total_invited * 100) if stats.total_invited > 0 else 0 %}
+                        {% set no_response_pct = (stats.total_no_response / stats.total_invited * 100) if stats.total_invited > 0 else 0 %}
+                        
+                        <div class="progress-bar bg-success" 
+                             style="width: {{ attending_pct }}%"
+                             title="Attending: {{ stats.total_attending }}">
+                            {% if attending_pct > 10 %}{{ stats.total_attending }}{% endif %}
+                        </div>
+                        <div class="progress-bar bg-danger" 
+                             style="width: {{ not_attending_pct }}%"
+                             title="Not Attending: {{ stats.total_not_attending }}">
+                            {% if not_attending_pct > 10 %}{{ stats.total_not_attending }}{% endif %}
+                        </div>
+
+<div class="progress-bar bg-secondary" 
+                             style="width: {{ no_response_pct }}%"
+                             title="No Response: {{ stats.total_no_response }}">
+                            {% if no_response_pct > 10 %}{{ stats.total_no_response }}{% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between text-muted small mb-3">
+                        <span><i class="fas fa-check-circle text-success"></i> Info: {{ stats.info_completed }}/{{ stats.total_attending }}</span>
+                        <span><i class="fas fa-hotel text-info"></i> Hotel: {{ stats.hotel_completed }}/{{ stats.total_attending }}</span>
+                    </div>
+                </div>
+                <div class="card-footer bg-white">
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('course_detail', course_id=course.id) }}" 
+                           class="btn btn-sm btn-outline-primary">
+                            <i class="fas fa-eye"></i> View Details
+                        </a>
+                        <div>
+                            <a href="{{ url_for('edit_course', course_id=course.id) }}" 
+                               class="btn btn-sm btn-outline-secondary">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
+                            <form method="POST" 
+                                  action="{{ url_for('delete_course', course_id=course.id) }}" 
+                                  style="display: inline;">
+                                <button type="submit" 
+                                        class="btn btn-sm btn-outline-danger delete-confirm">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info text-center py-5">
+                <i class="fas fa-info-circle fa-3x mb-3"></i>
+                <h4>No Courses Yet</h4>
+                <p class="mb-4">Get started by creating your first course.</p>
+                <a href="{{ url_for('create_course') }}" class="btn btn-gradient btn-lg">
+                    <i class="fas fa-plus"></i> Create First Course
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .stat-box {
+        padding: 10px;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+    
+    .stat-box h4 {
+        font-weight: bold;
+        font-size: 1.5rem;
+    }
+    
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    }
+</style>
+{% endblock %}

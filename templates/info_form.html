@@ -1,125 +1,343 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Complete Your Information - {{ course.name }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-</head>
-<body>
-    <div class="container">
-        <h1>📝 Complete Your Information</h1>
-        
-        <div class="card">
-            <h3>{{ course.name }}</h3>
-            <p><strong>📅 Dates:</strong> {{ course.start_date }} to {{ course.end_date }}</p>
+{% extends "base.html" %}
+
+{% block title %}Information Form - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Course Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-6 mb-3">{{ course.name }}</h1>
+                <p class="lead text-muted">Additional Information Request</p>
+            </div>
+            
+            <!-- Welcome Message -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5>Hello, {{ person.first_name }}!</h5>
+                    <p class="mb-0">
+                        Thank you for confirming your attendance. Please provide the following information 
+                        to help us prepare for your arrival.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Information Form -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt"></i> Your Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('info_form', token=person.token) }}">
+                        
+                        <!-- Contact Information Section -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-address-card"></i> Contact Information
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="phone" class="form-label">Phone Number *</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="phone" 
+                                       name="phone" 
+                                       value="{{ person.phone or '' }}"
+                                       required
+                                       placeholder="(555) 123-4567">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="address" class="form-label">Mailing Address</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="address" 
+                                       name="address" 
+                                       value="{{ person.address or '' }}"
+                                       placeholder="123 Main St">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="city" class="form-label">City</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="city" 
+                                       name="city" 
+                                       value="{{ person.city or '' }}"
+                                       placeholder="Your City">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="state" class="form-label">State</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="state" 
+                                       name="state" 
+                                       value="{{ person.state or '' }}"
+                                       maxlength="2"
+                                       placeholder="CA">
+                            </div>
+                            
+                            <div class="col-md-3 mb-3">
+                                <label for="zip_code" class="form-label">ZIP Code</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="zip_code" 
+                                       name="zip_code" 
+                                       value="{{ person.zip_code or '' }}"
+                                       placeholder="12345">
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">                       
+
+ <!-- Emergency Contact Section -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-phone-alt"></i> Emergency Contact
+                        </h6>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="emergency_contact_name" class="form-label">Contact Name *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="emergency_contact_name" 
+                                       name="emergency_contact_name" 
+                                       value="{{ person.emergency_contact_name or '' }}"
+                                       required
+                                       placeholder="Full Name">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="emergency_contact_phone" class="form-label">Contact Phone *</label>
+                                <input type="tel" 
+                                       class="form-control" 
+                                       id="emergency_contact_phone" 
+                                       name="emergency_contact_phone" 
+                                       value="{{ person.emergency_contact_phone or '' }}"
+                                       required
+                                       placeholder="(555) 123-4567">
+                            </div>
+                            
+                            <div class="col-md-12 mb-3">
+                                <label for="emergency_contact_relationship" class="form-label">Relationship *</label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="emergency_contact_relationship" 
+                                       name="emergency_contact_relationship" 
+                                       value="{{ person.emergency_contact_relationship or '' }}"
+                                       required
+                                       placeholder="Spouse, Parent, Sibling, etc.">
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Dietary Restrictions Section -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-utensils"></i> Dietary Information
+                        </h6>
+                        
+                        <div class="mb-3">
+                            <label for="dietary_restrictions" class="form-label">
+                                Dietary Restrictions or Allergies
+                            </label>
+                            <textarea class="form-control" 
+                                      id="dietary_restrictions" 
+                                      name="dietary_restrictions" 
+                                      rows="3"
+                                      placeholder="Please list any dietary restrictions, food allergies, or special meal requirements...">{{ person.dietary_restrictions or '' }}</textarea>
+                            <div class="form-text">
+                                Examples: Vegetarian, Vegan, Gluten-free, Nut allergy, etc.
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Medical Information Section -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-briefcase-medical"></i> Medical Information
+                        </h6>
+                        
+                        <div class="mb-3">
+                            <label for="medical_conditions" class="form-label">
+                                Medical Conditions or Accessibility Needs
+                            </label>
+                            <textarea class="form-control" 
+                                      id="medical_conditions" 
+                                      name="medical_conditions" 
+                                      rows="3"
+                                      placeholder="Please share any medical conditions or accessibility needs we should be aware of...">{{ person.medical_conditions or '' }}</textarea>
+                            <div class="form-text">
+                                This information is kept confidential and helps us provide better support.
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">                        
+
+<!-- T-Shirt Size (Optional) -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-tshirt"></i> T-Shirt Size (Optional)
+                        </h6>
+                        
+                        <div class="mb-3">
+                            <label for="tshirt_size" class="form-label">T-Shirt Size</label>
+                            <select class="form-select" id="tshirt_size" name="tshirt_size">
+                                <option value="">Select Size</option>
+                                <option value="XS" {% if person.tshirt_size == 'XS' %}selected{% endif %}>Extra Small (XS)</option>
+                                <option value="S" {% if person.tshirt_size == 'S' %}selected{% endif %}>Small (S)</option>
+                                <option value="M" {% if person.tshirt_size == 'M' %}selected{% endif %}>Medium (M)</option>
+                                <option value="L" {% if person.tshirt_size == 'L' %}selected{% endif %}>Large (L)</option>
+                                <option value="XL" {% if person.tshirt_size == 'XL' %}selected{% endif %}>Extra Large (XL)</option>
+                                <option value="2XL" {% if person.tshirt_size == '2XL' %}selected{% endif %}>2XL</option>
+                                <option value="3XL" {% if person.tshirt_size == '3XL' %}selected{% endif %}>3XL</option>
+                            </select>
+                        </div>
+                        
+                        {% if custom_questions %}
+                        <hr class="my-4">
+                        
+                        <!-- Custom Questions Section -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-question-circle"></i> Additional Questions
+                        </h6>
+                        
+                        {% for question in custom_questions %}
+                        <div class="mb-3">
+                            <label for="custom_{{ question.id }}" class="form-label">
+                                {{ question.question_text }}
+                                {% if question.is_required %}
+                                <span class="text-danger">*</span>
+                                {% endif %}
+                            </label>
+                            
+                            {% if question.question_type == 'TEXT' %}
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="custom_{{ question.id }}" 
+                                       name="custom_{{ question.id }}"
+                                       {% if question.is_required %}required{% endif %}>
+                            
+                            {% elif question.question_type == 'TEXTAREA' %}
+                                <textarea class="form-control" 
+                                          id="custom_{{ question.id }}" 
+                                          name="custom_{{ question.id }}"
+                                          rows="4"
+                                          {% if question.is_required %}required{% endif %}></textarea>
+                            
+                            {% elif question.question_type == 'SELECT' %}
+                                <select class="form-select" 
+                                        id="custom_{{ question.id }}" 
+                                        name="custom_{{ question.id }}"
+                                        {% if question.is_required %}required{% endif %}>
+                                    <option value="">Select an option</option>
+                                    {% for option in question.options.split('\n') %}
+                                    <option value="{{ option }}">{{ option }}</option>
+                                    {% endfor %}
+                                </select>
+                            
+                            {% elif question.question_type == 'RADIO' %}
+                                {% for option in question.options.split('\n') %}
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="radio" 
+                                           name="custom_{{ question.id }}"                                            
+
+id="custom_{{ question.id }}_{{ loop.index }}" 
+                                           value="{{ option }}"
+                                           {% if question.is_required %}required{% endif %}>
+                                    <label class="form-check-label" for="custom_{{ question.id }}_{{ loop.index }}">
+                                        {{ option }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            
+                            {% elif question.question_type == 'CHECKBOX' %}
+                                {% for option in question.options.split('\n') %}
+                                <div class="form-check">
+                                    <input class="form-check-input" 
+                                           type="checkbox" 
+                                           name="custom_{{ question.id }}" 
+                                           id="custom_{{ question.id }}_{{ loop.index }}" 
+                                           value="{{ option }}">
+                                    <label class="form-check-label" for="custom_{{ question.id }}_{{ loop.index }}">
+                                        {{ option }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                        {% endif %}
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Additional Comments -->
+                        <h6 class="mb-3 text-primary">
+                            <i class="fas fa-comment"></i> Additional Comments
+                        </h6>
+                        
+                        <div class="mb-4">
+                            <label for="additional_notes" class="form-label">
+                                Anything else we should know?
+                            </label>
+                            <textarea class="form-control" 
+                                      id="additional_notes" 
+                                      name="additional_notes" 
+                                      rows="4"
+                                      placeholder="Any other information, questions, or special requests...">{{ person.additional_notes or '' }}</textarea>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-gradient btn-lg">
+                                <i class="fas fa-check"></i> Submit Information
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Already Completed Notice -->
+            {% if person.info_completed_at %}
+            <div class="alert alert-success mt-4">
+                <i class="fas fa-check-circle"></i>
+                <strong>You've already completed this form.</strong><br>
+                <small>Submitted on {{ person.info_completed_at.strftime('%B %d, %Y at %I:%M %p') }}</small><br>
+                <small class="text-muted">You can update your information by submitting this form again.</small>
+            </div>
+            {% endif %}
+            
+            <!-- Contact Information -->
+            <div class="card mt-4 border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-question-circle"></i> 
+                        Questions? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
         </div>
-
-        {% if message %}
-        <div class="alert alert-success">{{ message }}</div>
-        {% endif %}
-
-        {% if error %}
-        <div class="alert alert-error">{{ error }}</div>
-        {% endif %}
-
-        <form method="POST" enctype="multipart/form-data">
-            <h2>Personal Information</h2>
-            
-            <label for="first_name">First Name: *</label>
-            <input type="text" id="first_name" name="first_name" value="{{ participant.first_name or '' }}" required>
-
-            <label for="last_name">Last Name: *</label>
-            <input type="text" id="last_name" name="last_name" value="{{ participant.last_name or '' }}" required>
-
-            <label for="email">Email: *</label>
-            <input type="email" id="email" name="email" value="{{ participant.email }}" readonly style="background: #f0f0f0;">
-
-            {% if course.questions %}
-            <h2>Additional Information</h2>
-            {% for question in course.questions %}
-            <label for="q_{{ question.id }}">
-                {{ question.label }}{% if question.required %} *{% endif %}
-            </label>
-            
-            {% set answer = participant.answers|selectattr('question_id', 'equalto', question.id)|first %}
-            
-            {% if question.field_type == 'textarea' %}
-            <textarea id="q_{{ question.id }}" name="q_{{ question.id }}" {% if question.required %}required{% endif %}>{{ answer.answer_text if answer else '' }}</textarea>
-            
-            {% elif question.field_type == 'email' %}
-            <input type="email" id="q_{{ question.id }}" name="q_{{ question.id }}" value="{{ answer.answer_text if answer else '' }}" {% if question.required %}required{% endif %}>
-            
-            {% elif question.field_type == 'date' %}
-            <input type="date" id="q_{{ question.id }}" name="q_{{ question.id }}" value="{{ answer.answer_text if answer else '' }}" {% if question.required %}required{% endif %}>
-            
-            {% else %}
-            <input type="text" id="q_{{ question.id }}" name="q_{{ question.id }}" value="{{ answer.answer_text if answer else '' }}" {% if question.required %}required{% endif %}>
-            {% endif %}
-            
-            {% endfor %}
-            {% endif %}
- {% if course.hotel_night1 or course.hotel_night2 or course.hotel_night3 %}
-            <h2>🏨 Hotel Accommodation</h2>
-            
-            <label>Do you need hotel accommodation?</label>
-            <div style="margin-bottom: 20px;">
-                <label style="display: inline-block; margin-right: 20px;">
-                    <input type="radio" name="need_hotel" value="yes" {% if participant.hotel_request and participant.hotel_request.need_hotel %}checked{% endif %} required> Yes
-                </label>
-                <label style="display: inline-block;">
-                    <input type="radio" name="need_hotel" value="no" {% if participant.hotel_request and participant.hotel_request.need_hotel == False %}checked{% endif %} required> No
-                </label>
-            </div>
-
-            <div id="hotel-nights" style="{% if not participant.hotel_request or not participant.hotel_request.need_hotel %}display: none;{% endif %}">
-                <label>Select nights you need accommodation:</label>
-                
-                {% if course.hotel_night1 %}
-                <label style="display: block; margin-bottom: 10px;">
-                    <input type="checkbox" name="night1" {% if participant.hotel_request and participant.hotel_request.night1 %}checked{% endif %}>
-                    {{ course.hotel_night1 }}
-                </label>
-                {% endif %}
-                
-                {% if course.hotel_night2 %}
-                <label style="display: block; margin-bottom: 10px;">
-                    <input type="checkbox" name="night2" {% if participant.hotel_request and participant.hotel_request.night2 %}checked{% endif %}>
-                    {{ course.hotel_night2 }}
-                </label>
-                {% endif %}
-                
-                {% if course.hotel_night3 %}
-                <label style="display: block; margin-bottom: 10px;">
-                    <input type="checkbox" name="night3" {% if participant.hotel_request and participant.hotel_request.night3 %}checked{% endif %}>
-                    {{ course.hotel_night3 }}
-                </label>
-                {% endif %}
-            </div>
-            {% endif %}
-
-            <h2>📎 Upload Files (Optional)</h2>
-            <p style="color: #666; margin-bottom: 15px;">You can upload documents, forms, or other files here. Multiple files are allowed.</p>
-            <label for="files">Select files to upload:</label>
-            <input type="file" id="files" name="files" multiple>
-
-            <input type="submit" value="Save Information">
-        </form>
-
-        <script>
-            // Show/hide hotel nights based on selection
-            document.querySelectorAll('input[name="need_hotel"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    const hotelNights = document.getElementById('hotel-nights');
-                    if (this.value === 'yes') {
-                        hotelNights.style.display = 'block';
-                    } else {
-                        hotelNights.style.display = 'none';
-                    }
-                });
-            });
-        </script>
     </div>
-</body>
-</html>
+</div>
 
+<style>
+    .form-label {
+        font-weight: 500;
+    }
+    
+    .text-primary {
+        border-bottom: 2px solid #0d6efd;
+        padding-bottom: 5px;
+    }
+    
+    hr {
+        border-top: 2px dashed #dee2e6;
+    }
+</style>
+{% endblock %}

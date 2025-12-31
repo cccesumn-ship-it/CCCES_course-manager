@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Information Submitted - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Success Message -->
+            <div class="text-center mb-5 mt-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                </div>
+                <h1 class="display-5 mb-3">Information Received!</h1>
+                <p class="lead">Thank you for providing your information.</p>
+            </div>
+            
+            <!-- Confirmation Details -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Submission Confirmed</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Name:</strong><br>
+                            {{ person.first_name }} {{ person.last_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Email:</strong><br>
+                            {{ person.email }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Phone:</strong><br>
+                            {{ person.phone or 'Not provided' }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Course:</strong><br>
+                            {{ course.name }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- What's Next -->
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-arrow-right"></i> What's Next?</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">We have everything we need from you at this time. You may receive additional emails regarding:</p>
+                    <ul class="mb-0">
+                        {% if course.hotel_night1 or course.hotel_night2 or course.hotel_night3 %}
+                        <li><i class="fas fa-hotel text-warning"></i> Hotel accommodation arrangements</li>
+                        {% endif %}
+                        <li><i class="fas fa-paperclip text-info"></i> Document upload requests (if applicable)</li>
+                        <li><i class="fas fa-calendar text-success"></i> Course schedule and logistics</li>
+                        <li><i class="fas fa-map-marker-alt text-danger"></i> Directions and parking information</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- Email Confirmation Notice -->
+            <div class="alert alert-info">
+                <i class="fas fa-envelope"></i>
+                <strong>Confirmation Email Sent</strong><br>
+                A confirmation email has been sent to <strong>{{ person.email }}</strong>.
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mb-5">
+                <p class="text-muted mb-3">Need to update your information?</p>
+                <a href="{{ url_for('info_form', token=person.token) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Update My Information
+                </a>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="card border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">                        
+
+<i class="fas fa-question-circle"></i> 
+                        Questions or need to make changes? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .fa-check-circle {
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

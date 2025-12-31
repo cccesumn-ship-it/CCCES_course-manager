@@ -1,0 +1,16 @@
+Hello {{ person.first_name }},
+
+{{ message }}
+
+---
+
+This message was sent regarding: {{ course.name }}
+
+{% if course.start_date and course.end_date %}
+Course Dates: {{ course.start_date.strftime('%B %d') }} - {{ course.end_date.strftime('%B %d, %Y') }}
+{% endif %}
+
+If you have any questions, please contact us.
+
+Best regards,
+Course Administration Team

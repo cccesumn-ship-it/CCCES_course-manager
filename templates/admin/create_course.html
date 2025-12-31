@@ -1,0 +1,159 @@
+{% extends "base.html" %}
+
+{% block title %}Create Course - Course Management{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0"><i class="fas fa-plus-circle"></i> Create New Course</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('create_course') }}">
+                        
+                        <!-- Course Name -->
+                        <div class="mb-4">
+                            <label for="name" class="form-label">
+                                <i class="fas fa-graduation-cap"></i> Course Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="name" 
+                                   name="name" 
+                                   required 
+                                   placeholder="e.g., Advanced Leadership Training 2024">
+                        </div>
+                        
+                        <!-- Course Dates -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">
+                                    <i class="fas fa-calendar-alt"></i> Start Date *
+                                </label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="start_date" 
+                                       name="start_date" 
+                                       required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">
+                                    <i class="fas fa-calendar-check"></i> End Date *
+                                </label>
+                                <input type="date" 
+                                       class="form-control" 
+                                       id="end_date" 
+                                       name="end_date" 
+                                       required>
+                            </div>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <h5 class="mb-3"><i class="fas fa-hotel"></i> Hotel Nights (Optional)</h5>
+                        <p class="text-muted small">Configure up to 3 hotel nights for this course</p>
+                        
+                        <!-- Hotel Night 1 -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Night 1</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hotel_night1" class="form-label">Date</label>
+                                        <input type="date" 
+                                               class="form-control" 
+                                               id="hotel_night1" 
+                                               name="hotel_night1">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hotel_night1_label" class="form-label">Label</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="hotel_night1_label" 
+                                               name="hotel_night1_label" 
+                                               placeholder="e.g., Night 1, Monday Night"
+                                               value="Night 1">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hotel Night 2 -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Night 2</h6>                                
+
+<div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hotel_night2" class="form-label">Date</label>
+                                        <input type="date" 
+                                               class="form-control" 
+                                               id="hotel_night2" 
+                                               name="hotel_night2">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hotel_night2_label" class="form-label">Label</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="hotel_night2_label" 
+                                               name="hotel_night2_label" 
+                                               placeholder="e.g., Night 2, Tuesday Night"
+                                               value="Night 2">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Hotel Night 3 -->
+                        <div class="card mb-3 bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title">Night 3</h6>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hotel_night3" class="form-label">Date</label>
+                                        <input type="date" 
+                                               class="form-control" 
+                                               id="hotel_night3" 
+                                               name="hotel_night3">
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="hotel_night3_label" class="form-label">Label</label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="hotel_night3_label" 
+                                               name="hotel_night3_label" 
+                                               placeholder="e.g., Night 3, Wednesday Night"
+                                               value="Night 3">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="fas fa-save"></i> Create Course
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-populate end date based on start date (optional)
+    document.getElementById('start_date').addEventListener('change', function() {
+        const startDate = new Date(this.value);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + 4); // Default 5-day course
+        
+        document.getElementById('end_date').value = endDate.toISOString().split('T')[0];
+    });
+</script>
+{% endblock %}

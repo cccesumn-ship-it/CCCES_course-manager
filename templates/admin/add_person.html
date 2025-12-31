@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block title %}Add Person - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-user-plus"></i> Add Person</h2>
+                <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Course
+                </a>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5 class="mb-0">Course: {{ course.name }}</h5>
+                </div>
+            </div>
+            
+            <!-- Add Person Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user"></i> Person Information</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('add_person', course_id=course.id) }}">
+                        
+                        <!-- First Name -->
+                        <div class="mb-3">
+                            <label for="first_name" class="form-label">
+                                <i class="fas fa-user"></i> First Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="first_name" 
+                                   name="first_name" 
+                                   required
+                                   placeholder="Enter first name">
+                        </div>
+                        
+                        <!-- Last Name -->
+                        <div class="mb-3">
+                            <label for="last_name" class="form-label">
+                                <i class="fas fa-user"></i> Last Name *
+                            </label>
+                            <input type="text" 
+                                   class="form-control" 
+                                   id="last_name" 
+                                   name="last_name" 
+                                   required
+                                   placeholder="Enter last name">
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope"></i> Email Address *
+                            </label>
+                            <input type="email" 
+                                   class="form-control" 
+                                   id="email" 
+                                   name="email" 
+                                   required
+                                   placeholder="email@example.com">
+                            <div class="form-text">
+                                This email must be unique within the course
+                            </div>
+                        </div>
+                        
+                        <!-- Role -->
+                        <div class="mb-4">
+                            <label for="role" class="form-label">
+                                <i class="fas fa-user-tag"></i> Role *
+                            </label>
+                            <select class="form-select" id="role" name="role" required>
+                                <option value="">-- Select Role --</option>
+                                <option value="PARTICIPANT">Participant</option>
+                                <option value="FACULTY">Faculty</option>
+                            </select>
+                        </div>
+                        
+                        <hr class="my-4">
+                        
+                        <!-- Send RSVP Email Option -->
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       id="send_rsvp" 
+                                       name="send_rsvp"
+                                       checked>                                
+
+<label class="form-check-label" for="send_rsvp">
+                                    <i class="fas fa-paper-plane"></i> Send RSVP email immediately after adding
+                                </label>
+                            </div>
+                            <div class="form-text">
+                                If unchecked, you can send the RSVP email manually later
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{{ url_for('course_detail', course_id=course.id) }}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-times"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-gradient">
+                                <i class="fas fa-save"></i> Add Person
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Help Card -->
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-question-circle"></i> Need to add multiple people?</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        For adding multiple participants or faculty at once, use the CSV/Excel upload feature.
+                    </p>
+                    <a href="{{ url_for('upload_persons', course_id=course.id) }}" 
+                       class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-file-upload"></i> Go to Upload Page
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    // Email validation
+    document.getElementById('email').addEventListener('blur', function() {
+        const email = this.value;
+        const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        
+        if (email && !emailPattern.test(email)) {
+            alert('Please enter a valid email address');
+            this.focus();
+        }
+    });
+    
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+        const firstName = document.getElementById('first_name').value.trim();
+        const lastName = document.getElementById('last_name').value.trim();
+        const email = document.getElementById('email').value.trim();
+        const role = document.getElementById('role').value;
+        
+        if (!firstName || !lastName || !email || !role) {
+            e.preventDefault();
+            alert('Please fill in all required fields');
+            return false;
+        }
+    });
+</script>
+{% endblock %}

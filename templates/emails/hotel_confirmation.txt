@@ -1,0 +1,49 @@
+Hello {{ person.first_name }},
+
+Thank you for submitting your hotel request for {{ course.name }}.
+
+Your Hotel Request:
+
+{% if person.needs_hotel %}
+You requested hotel accommodations for the following night(s):
+
+{% if person.hotel_night1 %}
+✓ {{ course.hotel_night1_label }} - {{ course.hotel_night1.strftime('%A, %B %d, %Y') }}
+{% endif %}
+
+{% if person.hotel_night2 %}
+✓ {{ course.hotel_night2_label }} - {{ course.hotel_night2.strftime('%A, %B %d, %Y') }}
+{% endif %}
+{% if person.hotel_night3 %}
+✓ {{ course.hotel_night3_label }} - {{ course.hotel_night3.strftime('%A, %B %d, %Y') }}
+{% endif %}
+
+{% if person.room_type %}
+Room Type: {{ person.room_type }}
+{% endif %}
+
+{% if person.roommate_preference %}
+Roommate Preference: {{ person.roommate_preference }}
+{% endif %}
+
+{% if person.accessibility_needs %}
+Accessibility Needs:
+{{ person.accessibility_needs }}
+{% endif %}
+
+{% if person.hotel_notes %}
+Additional Notes:
+{{ person.hotel_notes }}
+{% endif %}
+
+Our team will process your request and make the necessary arrangements. You will receive confirmation with hotel details closer to the course date.
+
+{% else %}
+You indicated that you will arrange your own accommodations.
+{% endif %}
+
+If you need to update your hotel request, you can do so using this link:
+{{ hotel_url }}
+
+Best regards,
+Course Administration Team

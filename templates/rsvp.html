@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}RSVP - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Course Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-5 mb-3">{{ course.name }}</h1>
+                <p class="lead text-muted">
+                    {% if course.start_date and course.end_date %}
+                        {{ course.start_date.strftime('%B %d') }} - {{ course.end_date.strftime('%B %d, %Y') }}
+                    {% endif %}
+                </p>
+                {% if course.location %}
+                <p class="text-muted">
+                    <i class="fas fa-map-marker-alt"></i> {{ course.location }}
+                </p>
+                {% endif %}
+            </div>
+            
+            <!-- Welcome Message -->
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h4>Hello, {{ person.first_name }} {{ person.last_name }}!</h4>
+                    <p class="text-muted mb-0">
+                        Please let us know if you'll be able to attend.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- RSVP Form -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-reply"></i> Your RSVP Response</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('rsvp', token=person.token) }}">
+                        
+                        <!-- Attendance Selection -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Will you be attending?</strong> *
+                            </label>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" 
+                                       type="radio" 
+                                       name="attending" 
+                                       id="attending_yes" 
+                                       value="yes" 
+                                       required>
+                                <label class="form-check-label" for="attending_yes">
+                                    <i class="fas fa-check-circle text-success"></i> 
+                                    Yes, I will attend
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="radio" 
+                                       name="attending" 
+                                       id="attending_no" 
+                                       value="no" 
+                                       required>
+                                <label class="form-check-label" for="attending_no">
+                                    <i class="fas fa-times-circle text-danger"></i> 
+                                    No, I cannot attend
+                                </label>
+                            </div>
+                        </div>                        
+
+<!-- Comments (Optional) -->
+                        <div class="mb-4">
+                            <label for="comments" class="form-label">
+                                Comments or Questions <span class="text-muted">(Optional)</span>
+                            </label>
+                            <textarea class="form-control" 
+                                      id="comments" 
+                                      name="comments" 
+                                      rows="4"
+                                      placeholder="Any dietary restrictions, accessibility needs, or questions you'd like to share..."></textarea>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-gradient btn-lg">
+                                <i class="fas fa-paper-plane"></i> Submit RSVP
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Already Responded Notice -->
+            {% if person.rsvp_response %}
+            <div class="alert alert-info mt-4">
+                <i class="fas fa-info-circle"></i>
+                <strong>You've already responded:</strong>
+                {% if person.rsvp_response.attending %}
+                    You indicated that you <strong>will attend</strong>.
+                {% else %}
+                    You indicated that you <strong>cannot attend</strong>.
+                {% endif %}
+                <br>
+                <small>Submitted on {{ person.rsvp_response.responded_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                <br>
+                <small class="text-muted">You can update your response by submitting this form again.</small>
+            </div>
+            {% endif %}
+            
+            <!-- Contact Information -->
+            <div class="card mt-4 border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-question-circle"></i> 
+                        Questions? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-check {
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .form-check:hover {
+        border-color: #0d6efd;
+        background-color: #f8f9fa;
+    }
+    
+    .form-check-input:checked + .form-check-label {
+        font-weight: bold;
+    }
+</style>
+{% endblock %}

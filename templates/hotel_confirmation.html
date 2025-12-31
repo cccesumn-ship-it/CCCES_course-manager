@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Hotel Request Confirmed - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Success Message -->
+            <div class="text-center mb-5 mt-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                </div>
+                <h1 class="display-5 mb-3">Hotel Request Received!</h1>
+                <p class="lead">Thank you for submitting your hotel preferences.</p>
+            </div>
+            
+            <!-- Request Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-hotel"></i> Your Hotel Request</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Name:</strong><br>
+                            {{ person.first_name }} {{ person.last_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Email:</strong><br>
+                            {{ person.email }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Course:</strong><br>
+                            {{ course.name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Hotel Needed:</strong><br>
+                            {% if person.needs_hotel %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> Yes
+                                </span>
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    <i class="fas fa-times"></i> No
+                                </span>
+                            {% endif %}
+                        </div>                       
+
+ {% if person.needs_hotel %}
+                        <div class="col-12">
+                            <hr>
+                            <h6 class="mb-3">Nights Requested:</h6>
+                            <ul class="list-unstyled">
+                                {% if person.hotel_night1 %}
+                                <li class="mb-2">
+                                    <i class="fas fa-moon text-warning"></i> 
+                                    <strong>{{ course.hotel_night1_label }}</strong>
+                                    {% if course.hotel_night1 %}
+                                    <br><small class="text-muted ms-4">{{ course.hotel_night1.strftime('%A, %B %d, %Y') }}</small>
+                                    {% endif %}
+                                </li>
+                                {% endif %}
+                                
+                                {% if person.hotel_night2 %}
+                                <li class="mb-2">
+                                    <i class="fas fa-moon text-warning"></i> 
+                                    <strong>{{ course.hotel_night2_label }}</strong>
+                                    {% if course.hotel_night2 %}
+                                    <br><small class="text-muted ms-4">{{ course.hotel_night2.strftime('%A, %B %d, %Y') }}</small>
+                                    {% endif %}
+                                </li>
+                                {% endif %}
+                                
+                                {% if person.hotel_night3 %}
+                                <li class="mb-2">
+                                    <i class="fas fa-moon text-warning"></i> 
+                                    <strong>{{ course.hotel_night3_label }}</strong>
+                                    {% if course.hotel_night3 %}
+                                    <br><small class="text-muted ms-4">{{ course.hotel_night3.strftime('%A, %B %d, %Y') }}</small>
+                                    {% endif %}
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        
+                        {% if person.room_type %}
+                        <div class="col-md-6 mb-3">
+                            <strong>Room Type:</strong><br>
+                            {{ person.room_type }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.roommate_preference %}
+                        <div class="col-md-6 mb-3">
+                            <strong>Roommate Preference:</strong><br>
+                            {{ person.roommate_preference }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.accessibility_needs %}
+                        <div class="col-12 mb-3">
+                            <strong>Accessibility Needs:</strong><br>
+                            <div class="alert alert-light mt-2 mb-0">
+                                {{ person.accessibility_needs }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.hotel_notes %}
+                        <div class="col-12">
+                            <strong>Additional Notes:</strong><br>
+                            <div class="alert alert-light mt-2 mb-0">
+                                {{ person.hotel_notes }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- What's Next -->
+            {% if person.needs_hotel %}
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-arrow-right"></i> What Happens Next?</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        Our team will process your hotel request and make the necessary arrangements.
+                    </p>
+                    <ul class="mb-0">                       
+
+ <li>You will receive a confirmation email with hotel details</li>
+                        <li>Hotel reservations will be made according to your preferences</li>
+                        <li>Check-in information will be sent closer to the course date</li>
+                        <li>Contact us if you need to make any changes</li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Email Confirmation Notice -->
+            <div class="alert alert-info">
+                <i class="fas fa-envelope"></i>
+                <strong>Confirmation Email Sent</strong><br>
+                A confirmation email has been sent to <strong>{{ person.email }}</strong>.
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mb-5">
+                <p class="text-muted mb-3">Need to update your hotel request?</p>
+                <a href="{{ url_for('hotel_request', token=person.token) }}" class="btn btn-outline-warning">
+                    <i class="fas fa-edit"></i> Update Hotel Request
+                </a>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="card border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-question-circle"></i> 
+                        Questions or need to make changes? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .fa-check-circle {
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,39 @@
+Hello {{ person.first_name }},
+
+Thank you for providing your information for {{ course.name }}.
+
+We have received the following information:
+
+Contact Information:
+- Phone: {{ person.phone }}
+{% if person.address %}
+- Address: {{ person.address }}
+{% if person.city and person.state %}
+  {{ person.city }}, {{ person.state }} {{ person.zip_code }}
+{% endif %}
+{% endif %}
+
+Emergency Contact:
+- Name: {{ person.emergency_contact_name }}
+- Phone: {{ person.emergency_contact_phone }}
+- Relationship: {{ person.emergency_contact_relationship }}
+
+{% if person.dietary_restrictions %}
+Dietary Restrictions:
+{{ person.dietary_restrictions }}
+{% endif %}
+
+{% if person.medical_conditions %}
+Medical/Accessibility Needs:
+{{ person.medical_conditions }}
+{% endif %}
+
+{% if person.tshirt_size %}
+T-Shirt Size: {{ person.tshirt_size }}
+{% endif %}
+
+If you need to update any of this information, you can do so using this link:
+{{ info_url }}
+
+Best regards,
+Course Administration Team

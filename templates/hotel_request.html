@@ -1,0 +1,284 @@
+{% extends "base.html" %}
+
+{% block title %}Hotel Request - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Course Header -->
+            <div class="text-center mb-5">
+                <h1 class="display-6 mb-3">{{ course.name }}</h1>
+                <p class="lead text-muted">Hotel Accommodation Request</p>
+            </div>
+            
+            <!-- Welcome Message -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5>Hello, {{ person.first_name }}!</h5>
+                    <p class="mb-0">
+                        Please let us know your hotel accommodation needs for the course.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Hotel Request Form -->
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-hotel"></i> Hotel Accommodation</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('hotel_request', token=person.token) }}">
+                        
+                        <!-- Hotel Needed Question -->
+                        <div class="mb-4">
+                            <label class="form-label">
+                                <strong>Do you need hotel accommodations?</strong> *
+                            </label>
+                            <div class="form-check mb-2">
+                                <input class="form-check-input" 
+                                       type="radio" 
+                                       name="needs_hotel" 
+                                       id="needs_hotel_yes" 
+                                       value="yes" 
+                                       {% if person.needs_hotel %}checked{% endif %}
+                                       required
+                                       onchange="toggleHotelFields(true)">
+                                <label class="form-check-label" for="needs_hotel_yes">
+                                    <i class="fas fa-check-circle text-success"></i> 
+                                    Yes, I need hotel accommodations
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" 
+                                       type="radio" 
+                                       name="needs_hotel" 
+                                       id="needs_hotel_no" 
+                                       value="no" 
+                                       {% if person.needs_hotel == False %}checked{% endif %}
+                                       required
+                                       onchange="toggleHotelFields(false)">
+                                <label class="form-check-label" for="needs_hotel_no">
+                                    <i class="fas fa-times-circle text-danger"></i> 
+                                    No, I will arrange my own accommodations
+                                </label>
+                            </div>
+                        </div>                        
+
+<div id="hotelFields" style="display: {% if person.needs_hotel %}block{% else %}none{% endif %};">
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Night Selection -->
+                            <h6 class="mb-3 text-warning">
+                                <i class="fas fa-moon"></i> Which nights do you need?
+                            </h6>
+                            
+                            {% if course.hotel_night1 %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="hotel_night1" 
+                                       id="hotel_night1"
+                                       {% if person.hotel_night1 %}checked{% endif %}>
+                                <label class="form-check-label" for="hotel_night1">
+                                    <strong>{{ course.hotel_night1_label }}</strong>
+                                    {% if course.hotel_night1 %}
+                                    <br><small class="text-muted">{{ course.hotel_night1.strftime('%A, %B %d, %Y') }}</small>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endif %}
+                            
+                            {% if course.hotel_night2 %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="hotel_night2" 
+                                       id="hotel_night2"
+                                       {% if person.hotel_night2 %}checked{% endif %}>
+                                <label class="form-check-label" for="hotel_night2">
+                                    <strong>{{ course.hotel_night2_label }}</strong>
+                                    {% if course.hotel_night2 %}
+                                    <br><small class="text-muted">{{ course.hotel_night2.strftime('%A, %B %d, %Y') }}</small>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endif %}
+                            
+                            {% if course.hotel_night3 %}
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" 
+                                       type="checkbox" 
+                                       name="hotel_night3" 
+                                       id="hotel_night3"
+                                       {% if person.hotel_night3 %}checked{% endif %}>
+                                <label class="form-check-label" for="hotel_night3">
+                                    <strong>{{ course.hotel_night3_label }}</strong>
+                                    {% if course.hotel_night3 %}
+                                    <br><small class="text-muted">{{ course.hotel_night3.strftime('%A, %B %d, %Y') }}</small>
+                                    {% endif %}
+                                </label>
+                            </div>
+                            {% endif %}
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Room Preference -->
+                            <h6 class="mb-3 text-warning">
+                                <i class="fas fa-bed"></i> Room Preference
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Room Type</label>
+                                <select class="form-select" name="room_type" id="room_type">
+                                    <option value="">Select preference</option>
+                                    <option value="Single" {% if person.room_type == 'Single' %}selected{% endif %}>Single Room</option>
+                                    <option value="Double" {% if person.room_type == 'Double' %}selected{% endif %}>Double Room</option>
+                                    <option value="No Preference" {% if person.room_type == 'No Preference' %}selected{% endif %}>No Preference</option>
+                                </select>
+                            </div>                            
+
+<!-- Roommate Preference -->
+                            <div class="mb-3">
+                                <label for="roommate_preference" class="form-label">
+                                    Roommate Preference (if applicable)
+                                </label>
+                                <input type="text" 
+                                       class="form-control" 
+                                       id="roommate_preference" 
+                                       name="roommate_preference" 
+                                       value="{{ person.roommate_preference or '' }}"
+                                       placeholder="Name of preferred roommate (if any)">
+                                <div class="form-text">
+                                    Leave blank if you don't have a preference or need a single room.
+                                </div>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Accessibility Needs -->
+                            <h6 class="mb-3 text-warning">
+                                <i class="fas fa-universal-access"></i> Accessibility Needs
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label for="accessibility_needs" class="form-label">
+                                    Special Room Requirements
+                                </label>
+                                <textarea class="form-control" 
+                                          id="accessibility_needs" 
+                                          name="accessibility_needs" 
+                                          rows="3"
+                                          placeholder="E.g., wheelchair accessible, ground floor, near elevator, etc.">{{ person.accessibility_needs or '' }}</textarea>
+                            </div>
+                            
+                            <hr class="my-4">
+                            
+                            <!-- Additional Notes -->
+                            <h6 class="mb-3 text-warning">
+                                <i class="fas fa-comment"></i> Additional Requests
+                            </h6>
+                            
+                            <div class="mb-4">
+                                <label for="hotel_notes" class="form-label">
+                                    Any other hotel-related requests or notes?
+                                </label>
+                                <textarea class="form-control" 
+                                          id="hotel_notes" 
+                                          name="hotel_notes" 
+                                          rows="3"
+                                          placeholder="Any special requests or information we should know...">{{ person.hotel_notes or '' }}</textarea>
+                            </div>
+                            
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-gradient btn-lg">
+                                <i class="fas fa-paper-plane"></i> Submit Hotel Request
+                            </button>
+                        </div>
+                        
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Already Completed Notice -->
+            {% if person.hotel_completed_at %}
+            <div class="alert alert-success mt-4">
+                <i class="fas fa-check-circle"></i>
+                <strong>You've already submitted your hotel request.</strong><br>
+                <small>Submitted on {{ person.hotel_completed_at.strftime('%B %d, %Y at %I:%M %p') }}</small><br>
+                <small class="text-muted">You can update your request by submitting this form again.</small>
+            </div>
+            {% endif %}
+            
+            <!-- Contact Information -->
+            <div class="card mt-4 border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-question-circle"></i> 
+                        Questions about hotel accommodations? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<script>
+    function toggleHotelFields(show) {
+        const hotelFields = document.getElementById('hotelFields');
+        const inputs = hotelFields.querySelectorAll('input, select, textarea');
+        
+        if (show) {
+            hotelFields.style.display = 'block';
+            // Enable all inputs
+            inputs.forEach(input => {
+                input.disabled = false;
+            });
+        } else {
+            hotelFields.style.display = 'none';
+            // Disable all inputs
+            inputs.forEach(input => {
+                input.disabled = true;
+            });
+        }
+    }
+    
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        const needsHotelYes = document.getElementById('needs_hotel_yes');
+        if (needsHotelYes && needsHotelYes.checked) {
+            toggleHotelFields(true);
+        }
+    });
+</script>
+
+<style>
+    .form-check {
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .form-check:hover {
+        border-color: #ffc107;
+        background-color: #fffbf0;
+    }
+    
+    .form-check-input:checked + .form-check-label {
+        font-weight: bold;
+    }
+    
+    .text-warning {
+        border-bottom: 2px solid #ffc107;
+        padding-bottom: 5px;
+    }
+</style>
+{% endblock %}

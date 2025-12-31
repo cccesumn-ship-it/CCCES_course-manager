@@ -1,0 +1,22 @@
+Hello {{ person.first_name }},
+
+You are invited to participate in {{ course.name }}.
+
+Course Details:
+{% if course.start_date and course.end_date %}
+Dates: {{ course.start_date.strftime('%B %d') }} - {{ course.end_date.strftime('%B %d, %Y') }}
+{% endif %}
+{% if course.location %}
+Location: {{ course.location }}
+{% endif %}
+
+Please respond to this invitation by clicking the link below:
+
+{{ rsvp_url }}
+
+We need your response by {{ deadline if deadline else 'as soon as possible' }}.
+
+If you have any questions, please don't hesitate to contact us.
+
+Best regards,
+Course Administration Team

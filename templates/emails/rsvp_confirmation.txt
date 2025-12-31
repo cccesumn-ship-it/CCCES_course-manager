@@ -1,0 +1,36 @@
+Hello {{ person.first_name }},
+
+Thank you for your RSVP response for {{ course.name }}.
+
+Your Response:
+{% if person.rsvp_response.attending %}
+✓ You indicated that you WILL ATTEND
+{% else %}
+✗ You indicated that you CANNOT ATTEND
+{% endif %}
+
+{% if person.rsvp_response.comments %}
+Your Comments:
+{{ person.rsvp_response.comments }}
+{% endif %}
+
+{% if person.rsvp_response.attending %}
+What's Next:
+You will receive additional emails with:
+- A request for additional information
+{% if course.hotel_night1 or course.hotel_night2 or course.hotel_night3 %}
+- Hotel accommodation request form
+{% endif %}
+- Instructions for uploading required documents
+- Course schedule and logistics
+
+We look forward to seeing you!
+{% else %}
+We're sorry you can't make it. We hope to see you at a future event.
+{% endif %}
+
+If you need to change your response, you can do so at any time using this link:
+{{ rsvp_url }}
+
+Best regards,
+Course Administration Team

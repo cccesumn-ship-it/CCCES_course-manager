@@ -1,0 +1,461 @@
+                            
+{% extends "base.html" %}
+
+{% block title %}Edit {{ template_name }} - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-envelope-open-text"></i> Edit {{ template_name }}</h2>
+                <div>
+                    <a href="{{ url_for('email_templates', course_id=course.id) }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Templates
+                    </a>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Course: {{ course.name }}</h5>
+                </div>
+            </div>
+            
+            <!-- Template Info -->
+            <div class="alert alert-info">
+                <h6><i class="fas fa-info-circle"></i> Template Information:</h6>
+                <p class="mb-2">{{ template_description }}</p>
+                <p class="mb-0">
+                    <strong>Use variables to personalize emails:</strong> 
+                    <code>{first_name}</code>, <code>{last_name}</code>, <code>{course_name}</code>, 
+                    <code>{rsvp_link}</code>, <code>{info_link}</code>, <code>{hotel_link}</code>, etc.
+                </p>
+            </div>
+            
+            <!-- Edit Form -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit"></i> Edit Template</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('edit_email_template', course_id=course.id, template_type=template_type) }}">
+                        
+                        <!-- Email Subject -->
+                        <div class="mb-4">
+                            <label for="subject" class="form-label">
+                                <i class="fas fa-heading"></i> Email Subject *
+                            </label>
+                            <input type="text" 
+                                   class="form-control form-control-lg" 
+                                   id="subject" 
+                                   name="subject" 
+                                   value="{{ current_subject }}"
+                                   required
+                                   placeholder="Enter email subject line">
+                            <div class="form-text">
+                                You can use variables like {first_name}, {course_name}, etc.
+                            </div>
+                        </div>
+                        
+                        <!-- Email Body -->
+                        <div class="mb-4">
+                            <label for="body" class="form-label">
+                                <i class="fas fa-align-left"></i> Email Body *
+                            </label>
+                            <textarea class="form-control" 
+                                      id="body" 
+                                      name="body" 
+                                      rows="15" 
+                                      required
+                                      placeholder="Enter email body content">{{ current_body }}</textarea>
+                            <div class="form-text">
+                                Write your email message. Line breaks will be preserved.
+                            </div>
+                        </div>
+                        
+                        <!-- Character Counter -->
+                        <div class="mb-4">
+                            <small class="text-muted">
+                                Character count: <span id="charCount">0</span>
+                            </small>
+                        </div>
+                        
+                        <hr>
+                        
+                        <!-- Action Buttons -->
+                        <div class="d-flex justify-content-between">
+                            <div>                                
+
+<button type="button" 
+                                        class="btn btn-outline-secondary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#variablesModal">
+                                    <i class="fas fa-code"></i> View Variables
+                                </button>
+                                <button type="button" 
+                                        class="btn btn-outline-info"
+                                        onclick="previewEmail()">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                            </div>
+                            <div>
+                                <a href="{{ url_for('email_templates', course_id=course.id) }}" 
+                                   class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Cancel
+                                </a>
+                                <button type="submit" class="btn btn-gradient">
+                                    <i class="fas fa-save"></i> Save Template
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Quick Insert Variables -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-magic"></i> Quick Insert Variables</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">Click to insert variable at cursor position</p>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-primary w-100" onclick="insertVariable('{first_name}')">
+                                {first_name}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-primary w-100" onclick="insertVariable('{last_name}')">
+                                {last_name}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-primary w-100" onclick="insertVariable('{email}')">
+                                {email}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-primary w-100" onclick="insertVariable('{course_name}')">
+                                {course_name}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-success w-100" onclick="insertVariable('{start_date}')">
+                                {start_date}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-success w-100" onclick="insertVariable('{end_date}')">
+                                {end_date}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-success w-100" onclick="insertVariable('{location}')">
+                                {location}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-info w-100" onclick="insertVariable('{rsvp_link}')">
+                                {rsvp_link}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-info w-100" onclick="insertVariable('{info_link}')">
+                                {info_link}
+</button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-info w-100" onclick="insertVariable('{hotel_link}')">
+                                {hotel_link}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-warning w-100" onclick="insertVariable('{hotel_night1_label}')">
+                                {hotel_night1_label}
+                            </button>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <button class="btn btn-sm btn-outline-warning w-100" onclick="insertVariable('{hotel_night2_label}')">
+                                {hotel_night2_label}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Default Template -->
+            <div class="card">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-undo"></i> Default Template</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">Need to start over? Here's the default template:</p>
+                    <div class="bg-light p-3 rounded">
+                        <strong>Subject:</strong><br>
+                        <code>{{ default_subject }}</code>
+                        <hr>
+                        <strong>Body:</strong><br>
+                        <pre style="white-space: pre-wrap; font-size: 0.9em;">{{ default_body }}</pre>
+                    </div>
+                    <button type="button" 
+                            class="btn btn-warning mt-3"
+                            onclick="resetToDefault()">
+                        <i class="fas fa-undo"></i> Reset to Default Template
+                    </button>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Variables Reference Modal -->
+<div class="modal fade" id="variablesModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Available Variables</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Variable</th>
+                                <th>Description</th>
+                                <th>Example Output</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>{first_name}</code></td>
+                                <td>Person's first name</td>
+                                <td>John</td>
+                            </tr>
+                            <tr>
+                                <td><code>{last_name}</code></td>
+                                <td>Person's last name</td>
+                                <td>Doe</td>
+                            </tr>
+                            <tr>
+                                <td><code>{email}</code></td>
+                                <td>Person's email address</td>
+                                <td>john.doe@example.com</td>
+                            </tr>
+                            <tr>
+                                <td><code>{role}</code></td>
+                                <td>Person's role</td>
+                                <td>PARTICIPANT or FACULTY</td>
+                            </tr>
+                            <tr>
+                                <td><code>{course_name}</code></td>
+                                <td>Course name</td>                               
+
+ <td>{{ course.name }}</td>
+                            </tr>
+                            <tr>
+                                <td><code>{start_date}</code></td>
+                                <td>Course start date</td>
+                                <td>{{ course.start_date.strftime('%B %d, %Y') if course.start_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><code>{end_date}</code></td>
+                                <td>Course end date</td>
+                                <td>{{ course.end_date.strftime('%B %d, %Y') if course.end_date else 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><code>{location}</code></td>
+                                <td>Course location</td>
+                                <td>{{ course.location or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><code>{rsvp_link}</code></td>
+                                <td>Unique RSVP form link</td>
+                                <td>https://yoursite.com/rsvp/abc123</td>
+                            </tr>
+                            <tr>
+                                <td><code>{info_link}</code></td>
+                                <td>Unique info form link</td>
+                                <td>https://yoursite.com/info/abc123</td>
+                            </tr>
+                            <tr>
+                                <td><code>{hotel_link}</code></td>
+                                <td>Unique hotel request link</td>
+                                <td>https://yoursite.com/hotel/abc123</td>
+                            </tr>
+                            <tr>
+                                <td><code>{hotel_night1_label}</code></td>
+                                <td>Label for hotel night 1</td>
+                                <td>{{ course.hotel_night1_label or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><code>{hotel_night2_label}</code></td>
+                                <td>Label for hotel night 2</td>
+                                <td>{{ course.hotel_night2_label or 'N/A' }}</td>
+                            </tr>
+                            <tr>
+                                <td><code>{hotel_night3_label}</code></td>
+                                <td>Label for hotel night 3</td>
+                                <td>{{ course.hotel_night3_label or 'N/A' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Subject:</strong><br>
+                    <span id="previewSubject"></span>
+                </div>
+                <hr>
+                <div id="previewBody" style="white-space: pre-wrap;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const bodyTextarea = document.getElementById('body');
+    const subjectInput = document.getElementById('subject');
+    const charCount = document.getElementById('charCount');
+    
+    // Character counter
+    function updateCharCount() {
+        charCount.textContent = bodyTextarea.value.length;
+    }
+    
+    bodyTextarea.addEventListener('input', updateCharCount);
+    updateCharCount();    
+
+// Insert variable at cursor position
+    function insertVariable(variable) {
+        const textarea = bodyTextarea;
+        const startPos = textarea.selectionStart;
+        const endPos = textarea.selectionEnd;
+        const textBefore = textarea.value.substring(0, startPos);
+        const textAfter = textarea.value.substring(endPos);
+        
+        textarea.value = textBefore + variable + textAfter;
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = startPos + variable.length;
+        
+        updateCharCount();
+    }
+    
+    // Preview email with sample data
+    function previewEmail() {
+        const subject = subjectInput.value;
+        const body = bodyTextarea.value;
+        
+        // Replace variables with sample data
+        let previewSubject = subject
+            .replace(/{first_name}/g, 'John')
+            .replace(/{last_name}/g, 'Doe')
+            .replace(/{email}/g, 'john.doe@example.com')
+            .replace(/{role}/g, 'PARTICIPANT')
+            .replace(/{course_name}/g, '{{ course.name }}')
+            .replace(/{start_date}/g, '{{ course.start_date.strftime("%B %d, %Y") if course.start_date else "TBD" }}')
+            .replace(/{end_date}/g, '{{ course.end_date.strftime("%B %d, %Y") if course.end_date else "TBD" }}')
+            .replace(/{location}/g, '{{ course.location or "TBD" }}');
+        
+        let previewBody = body
+            .replace(/{first_name}/g, 'John')
+            .replace(/{last_name}/g, 'Doe')
+            .replace(/{email}/g, 'john.doe@example.com')
+            .replace(/{role}/g, 'PARTICIPANT')
+            .replace(/{course_name}/g, '{{ course.name }}')
+            .replace(/{start_date}/g, '{{ course.start_date.strftime("%B %d, %Y") if course.start_date else "TBD" }}')
+            .replace(/{end_date}/g, '{{ course.end_date.strftime("%B %d, %Y") if course.end_date else "TBD" }}')
+            .replace(/{location}/g, '{{ course.location or "TBD" }}')
+            .replace(/{rsvp_link}/g, 'https://yoursite.com/rsvp/abc123def456')
+            .replace(/{info_link}/g, 'https://yoursite.com/info/abc123def456')
+            .replace(/{hotel_link}/g, 'https://yoursite.com/hotel/abc123def456')
+            .replace(/{hotel_night1_label}/g, '{{ course.hotel_night1_label or "Night 1" }}')
+            .replace(/{hotel_night2_label}/g, '{{ course.hotel_night2_label or "Night 2" }}')
+            .replace(/{hotel_night3_label}/g, '{{ course.hotel_night3_label or "Night 3" }}');
+        
+        document.getElementById('previewSubject').textContent = previewSubject;
+        document.getElementById('previewBody').textContent = previewBody;
+        
+        const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+        previewModal.show();
+    }
+    
+    // Reset to default template
+    function resetToDefault() {
+        if (confirm('Are you sure you want to reset to the default template? Your current changes will be lost.')) {
+            subjectInput.value = `{{ default_subject }}`;
+            bodyTextarea.value = `{{ default_body }}`;
+            updateCharCount();
+        }
+    }
+    
+    // Warn before leaving with unsaved changes   
+
+ let originalSubject = subjectInput.value;
+    let originalBody = bodyTextarea.value;
+    
+    window.addEventListener('beforeunload', function(e) {
+        if (subjectInput.value !== originalSubject || bodyTextarea.value !== originalBody) {
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    
+    // Remove warning when form is submitted
+    document.querySelector('form').addEventListener('submit', function() {
+        window.removeEventListener('beforeunload', null);
+    });
+    
+    // Tab key support in textarea
+    bodyTextarea.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
+</script>
+
+<style>
+    #body {
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+    }
+    
+    .btn-outline-primary:hover,
+    .btn-outline-success:hover,
+    .btn-outline-info:hover,
+    .btn-outline-warning:hover {
+        transform: scale(1.05);
+        transition: transform 0.2s;
+    }
+    
+    pre {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,25 @@
+Hello {{ person.first_name }},
+
+We are arranging hotel accommodations for {{ course.name }}.
+
+Please let us know your hotel needs by clicking the link below:
+
+{{ hotel_url }}
+
+Available Nights:
+{% if course.hotel_night1 %}
+- {{ course.hotel_night1_label }}: {{ course.hotel_night1.strftime('%A, %B %d, %Y') }}
+{% endif %}
+{% if course.hotel_night2 %}
+- {{ course.hotel_night2_label }}: {{ course.hotel_night2.strftime('%A, %B %d, %Y') }}
+{% endif %}
+{% if course.hotel_night3 %}
+- {{ course.hotel_night3_label }}: {{ course.hotel_night3.strftime('%A, %B %d, %Y') }}
+{% endif %}
+
+Please submit your request as soon as possible so we can make the necessary arrangements.
+
+If you have any special requirements or questions, please include them in the form or contact us directly.
+
+Best regards,
+Course Administration Team

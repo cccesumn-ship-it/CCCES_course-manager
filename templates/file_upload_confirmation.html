@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Files Uploaded - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Success Message -->
+            <div class="text-center mb-5 mt-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                </div>
+                <h1 class="display-5 mb-3">Files Uploaded Successfully!</h1>
+                <p class="lead">Your documents have been received.</p>
+            </div>            
+
+<!-- Upload Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check"></i> Upload Confirmed</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Name:</strong><br>
+                            {{ person.first_name }} {{ person.last_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Email:</strong><br>
+                            {{ person.email }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Course:</strong><br>
+                            {{ course.name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Files Uploaded:</strong><br>
+                            <span class="badge bg-success">
+                                {{ person.uploaded_files.count() }} file(s)
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Uploaded Files List -->
+            {% if person.uploaded_files.count() > 0 %}
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-paperclip"></i> Your Uploaded Files</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Size</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in person.uploaded_files.order_by(UploadedFile.uploaded_at.desc()) %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file-{{ file.file_extension }} text-primary"></i>
+                                        {{ file.original_filename }}
+                                    </td>
+                                    <td>{{ (file.file_size / 1024 / 1024)|round(2) }} MB</td>
+                                    <td>{{ file.uploaded_at.strftime('%b %d, %Y at %I:%M %p') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('download_file', file_id=file.id, token=person.token) }}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           target="_blank">
+                                            <i class="fas fa-download"></i> Download
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Email Confirmation Notice -->
+            <div class="alert alert-info">
+                <i class="fas fa-envelope"></i>
+                <strong>Confirmation Email Sent</strong><br>
+                A confirmation email has been sent to <strong>{{ person.email }}</strong>.
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mb-5">
+                <p class="text-muted mb-3">Need to upload more files?</p>
+                <a href="{{ url_for('file_upload', token=person.token) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-upload"></i> Upload Additional Files
+                </a>
+            </div>            
+
+<!-- Contact Information -->
+            <div class="card border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-question-circle"></i> 
+                        Questions or need to upload different files? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .fa-check-circle {
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

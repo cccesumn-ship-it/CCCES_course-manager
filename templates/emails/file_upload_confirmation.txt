@@ -1,0 +1,19 @@
+Hello {{ person.first_name }},
+
+Thank you for uploading your documents for {{ course.name }}.
+
+Files Received:
+{% for file in files %}
+- {{ file.original_filename }} ({{ (file.file_size / 1024 / 1024)|round(2) }} MB)
+  Uploaded: {{ file.uploaded_at.strftime('%B %d, %Y at %I:%M %p') }}
+{% endfor %}
+
+Total Files: {{ files|length }}
+
+Your documents have been securely stored and will be reviewed by our team.
+
+If you need to upload additional files, you can do so using this link:
+{{ upload_url }}
+
+Best regards,
+Course Administration Team

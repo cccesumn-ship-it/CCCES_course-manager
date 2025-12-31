@@ -1,0 +1,23 @@
+Hello {{ person.first_name }},
+
+Thank you for confirming your attendance at {{ course.name }}.
+
+We need some additional information from you to help us prepare for your arrival.
+
+Please complete the information form by clicking the link below:
+
+{{ info_url }}
+
+The form should take approximately 5-10 minutes to complete. We'll ask for:
+- Contact information
+- Emergency contact details
+- Dietary restrictions
+- Medical/accessibility needs
+- T-shirt size (optional)
+
+Please complete this form at your earliest convenience.
+
+If you have any questions, please contact us.
+
+Best regards,
+Course Administration Team

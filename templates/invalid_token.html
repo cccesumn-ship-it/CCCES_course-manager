@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Invalid or Expired Link{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Error Message -->
+            <div class="text-center mb-5 mt-5">
+                <div class="mb-4">
+                    <i class="fas fa-link text-warning" style="font-size: 80px;"></i>
+                    <i class="fas fa-times-circle text-danger" style="font-size: 40px; position: relative; left: -30px; top: -20px;"></i>
+                </div>
+                <h1 class="display-5 mb-3">Invalid or Expired Link</h1>
+                <p class="lead text-muted">The link you're trying to access is no longer valid.</p>
+            </div>
+            
+            <!-- Explanation Card -->
+            <div class="card border-warning mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Why is this happening?</h5>
+                </div>
+                <div class="card-body">
+                    <p>This could happen for several reasons:</p>
+                    <ul class="mb-0">
+                        <li>The link may have expired</li>
+                        <li>The link may have been used already</li>
+                        <li>The link may be incomplete or corrupted</li>
+                        <li>You may have been removed from the course</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <!-- What to do -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-question-circle"></i> What should you do?</h5>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li class="mb-2">
+                            <strong>Check your email</strong> for the most recent message with a fresh link
+                        </li>
+                        <li class="mb-2">
+                            <strong>Make sure you copied the entire link</strong> from your email (some email clients may break long URLs)
+                        </li>
+                        <li class="mb-2">
+                            <strong>Contact the course administrator</strong> to request a new link
+                        </li>
+                    </ol>
+                </div>
+            </div>
+            
+            <!-- Tips -->
+            <div class="alert alert-info">
+                <h6><i class="fas fa-lightbulb"></i> Helpful Tips:</h6>
+                <ul class="mb-0">
+                    <li>Always use the most recent email you received</li>
+                    <li>Click the link directly from your email rather than copying and pasting</li>
+                    <li>If you're on a mobile device, try opening the link in a browser</li>
+                </ul>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mb-5">                
+
+<a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-home"></i> Go to Home
+                </a>
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="card border-secondary">
+                <div class="card-body text-center">
+                    <h6 class="mb-3">Need a new link?</h6>
+                    <p class="mb-3">
+                        <i class="fas fa-envelope"></i> 
+                        Contact us and we'll send you a fresh link:
+                    </p>
+                    <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}" class="btn btn-outline-primary">
+                        <i class="fas fa-envelope"></i> Email Support
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .fa-link, .fa-times-circle {
+        animation: fadeIn 0.5s;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,380 @@
+{% extends "base.html" %}
+
+{% block title %}Email Templates - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2><i class="fas fa-envelope"></i> Email Templates</h2>
+                <a href="{{ url_for('course_detail', course_id=course.id) }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Course
+                </a>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Course: {{ course.name }}</h5>
+                </div>
+            </div>
+            
+            <!-- Instructions -->
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i>
+                <strong>About Email Templates:</strong>
+                Customize the email messages sent to participants and faculty. You can use variables like 
+                <code>{first_name}</code>, <code>{last_name}</code>, <code>{course_name}</code>, and 
+                <code>{rsvp_link}</code> which will be automatically replaced with actual values.
+            </div>
+            
+            <!-- Available Variables Reference -->
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-code"></i> Available Variables</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Person Variables:</h6>
+                            <ul class="list-unstyled">
+                                <li><code>{first_name}</code> - First name</li>
+                                <li><code>{last_name}</code> - Last name</li>
+                                <li><code>{email}</code> - Email address</li>
+                                <li><code>{role}</code> - Role (PARTICIPANT/FACULTY)</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Course Variables:</h6>
+                            <ul class="list-unstyled">
+                                <li><code>{course_name}</code> - Course name</li>
+                                <li><code>{start_date}</code> - Start date</li>
+                                <li><code>{end_date}</code> - End date</li>
+                                <li><code>{location}</code> - Location</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Link Variables:</h6>
+                            <ul class="list-unstyled">
+                                <li><code>{rsvp_link}</code> - RSVP form link</li>
+                                <li><code>{info_link}</code> - Info form link</li>
+                                <li><code>{hotel_link}</code> - Hotel request link</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Hotel Variables:</h6>
+                            <ul class="list-unstyled">
+                                <li><code>{hotel_night1_label}</code></li>
+                                <li><code>{hotel_night2_label}</code></li>
+                                <li><code>{hotel_night3_label}</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Email Templates List -->
+            <div class="row">
+                
+                <!-- RSVP Email Template -->                
+
+<div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-reply"></i> RSVP Invitation Email
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                <strong>Sent to:</strong> All participants and faculty when they are first added to the course.
+                            </p>
+                            <p class="text-muted">
+                                <strong>Purpose:</strong> Request attendance confirmation
+                            </p>
+                            
+                            {% if course.rsvp_email_subject %}
+                            <div class="mb-3">
+                                <strong>Current Subject:</strong><br>
+                                <span class="text-muted">{{ course.rsvp_email_subject }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('edit_email_template', course_id=course.id, template_type='rsvp') }}" 
+                                   class="btn btn-outline-primary">
+                                    <i class="fas fa-edit"></i> Edit Template
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#previewRsvpModal">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Info Request Email Template -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-file-alt"></i> Information Request Email
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                <strong>Sent to:</strong> Participants/faculty who confirmed attendance
+                            </p>
+                            <p class="text-muted">
+                                <strong>Purpose:</strong> Request additional information (dietary, emergency contact, etc.)
+                            </p>
+                            
+                            {% if course.info_email_subject %}
+                            <div class="mb-3">
+                                <strong>Current Subject:</strong><br>
+                                <span class="text-muted">{{ course.info_email_subject }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('edit_email_template', course_id=course.id, template_type='info') }}" 
+                                   class="btn btn-outline-success">
+                                    <i class="fas fa-edit"></i> Edit Template
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#previewInfoModal">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hotel Request Email Template -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-warning">
+                            <h5 class="mb-0">
+                                <i class="fas fa-hotel"></i> Hotel Request Email
+                            </h5>                       
+
+ </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                <strong>Sent to:</strong> Participants/faculty who confirmed attendance
+                            </p>
+                            <p class="text-muted">
+                                <strong>Purpose:</strong> Request hotel accommodation preferences
+                            </p>
+                            
+                            {% if course.hotel_email_subject %}
+                            <div class="mb-3">
+                                <strong>Current Subject:</strong><br>
+                                <span class="text-muted">{{ course.hotel_email_subject }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('edit_email_template', course_id=course.id, template_type='hotel') }}" 
+                                   class="btn btn-outline-warning">
+                                    <i class="fas fa-edit"></i> Edit Template
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#previewHotelModal">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- File Upload Email Template -->
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-paperclip"></i> File Upload Request Email
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted">
+                                <strong>Sent to:</strong> Participants/faculty who confirmed attendance
+                            </p>
+                            <p class="text-muted">
+                                <strong>Purpose:</strong> Request document uploads (resume, certificates, etc.)
+                            </p>
+                            
+                            {% if course.file_email_subject %}
+                            <div class="mb-3">
+                                <strong>Current Subject:</strong><br>
+                                <span class="text-muted">{{ course.file_email_subject }}</span>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('edit_email_template', course_id=course.id, template_type='file') }}" 
+                                   class="btn btn-outline-info">
+                                    <i class="fas fa-edit"></i> Edit Template
+                                </a>
+                                <button type="button" 
+                                        class="btn btn-outline-secondary btn-sm"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#previewFileModal">
+                                    <i class="fas fa-eye"></i> Preview
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+            
+            <!-- Bulk Actions -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-paper-plane"></i> Bulk Email Actions</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        Send emails to multiple people at once. These actions will use the templates configured above.
+                    </p>
+                    <div class="row">
+                        <div class="col-md-3 mb-2">                            
+
+<form method="POST" action="{{ url_for('send_bulk_rsvp', course_id=course.id) }}"
+                                  onsubmit="return confirm('Send RSVP emails to all people with NO_RESPONSE status?');">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-envelope"></i> Send RSVP to All
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <form method="POST" action="{{ url_for('send_bulk_info', course_id=course.id) }}"
+                                  onsubmit="return confirm('Send Info Request emails to all attending people who haven\'t completed the form?');">
+                                <button type="submit" class="btn btn-success w-100">
+                                    <i class="fas fa-file-alt"></i> Send Info to All
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <form method="POST" action="{{ url_for('send_bulk_hotel', course_id=course.id) }}"
+                                  onsubmit="return confirm('Send Hotel Request emails to all attending people who haven\'t completed the request?');">
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="fas fa-hotel"></i> Send Hotel to All
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <form method="POST" action="{{ url_for('send_bulk_file', course_id=course.id) }}"
+                                  onsubmit="return confirm('Send File Upload Request emails to all attending people?');">
+                                <button type="submit" class="btn btn-info w-100">
+                                    <i class="fas fa-paperclip"></i> Send File Request
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<!-- Preview Modals -->
+<!-- RSVP Preview Modal -->
+<div class="modal fade" id="previewRsvpModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">RSVP Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Subject:</strong> {{ course.rsvp_email_subject or 'RSVP for ' + course.name }}
+                </div>
+                <hr>
+                <div style="white-space: pre-wrap;">{{ course.rsvp_email_body or 'No template set' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Preview Modal -->
+<div class="modal fade" id="previewInfoModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Information Request Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Subject:</strong> {{ course.info_email_subject or 'Additional Information Needed - ' + course.name }}
+                </div>
+                <hr>                
+
+<div style="white-space: pre-wrap;">{{ course.info_email_body or 'No template set' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hotel Preview Modal -->
+<div class="modal fade" id="previewHotelModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Hotel Request Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Subject:</strong> {{ course.hotel_email_subject or 'Hotel Accommodation Request - ' + course.name }}
+                </div>
+                <hr>
+                <div style="white-space: pre-wrap;">{{ course.hotel_email_body or 'No template set' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- File Upload Preview Modal -->
+<div class="modal fade" id="previewFileModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">File Upload Request Email Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>Subject:</strong> {{ course.file_email_subject or 'Document Upload Request - ' + course.name }}
+                </div>
+                <hr>
+                <div style="white-space: pre-wrap;">{{ course.file_email_body or 'No template set' }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .card {
+        transition: transform 0.2s;
+    }
+    
+    .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}

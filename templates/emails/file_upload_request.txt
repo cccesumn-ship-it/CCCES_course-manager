@@ -1,0 +1,23 @@
+Hello {{ person.first_name }},
+
+We need you to upload some required documents for {{ course.name }}.
+
+Please upload your documents by clicking the link below:
+
+{{ upload_url }}
+
+Accepted file formats: PDF, Word documents (DOC/DOCX), Images (JPG/PNG)
+Maximum file size: 10 MB per file
+
+Required documents may include:
+- Identification documents
+- Certificates or licenses
+- Medical forms
+- Any other course-specific requirements
+
+Please upload your documents at your earliest convenience.
+
+If you have any questions or trouble uploading, please contact us.
+
+Best regards,
+Course Administration Team

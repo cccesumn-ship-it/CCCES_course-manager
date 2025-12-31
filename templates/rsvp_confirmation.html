@@ -1,0 +1,144 @@
+            
+{% extends "base.html" %}
+
+{% block title %}RSVP Confirmed - {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            
+            <!-- Success Message -->
+            <div class="text-center mb-5 mt-5">
+                <div class="mb-4">
+                    <i class="fas fa-check-circle text-success" style="font-size: 80px;"></i>
+                </div>
+                <h1 class="display-5 mb-3">Thank You!</h1>
+                <p class="lead">Your RSVP has been recorded.</p>
+            </div>
+            
+            <!-- Response Summary -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-info-circle"></i> Your Response</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong>Name:</strong><br>
+                            {{ person.first_name }} {{ person.last_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Email:</strong><br>
+                            {{ person.email }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Course:</strong><br>
+                            {{ course.name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Response:</strong><br>
+                            {% if attending %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check"></i> Will Attend
+                                </span>
+                            {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times"></i> Cannot Attend
+                                </span>
+                            {% endif %}
+                        </div>
+                        {% if comments %}
+                        <div class="col-12">
+                            <strong>Your Comments:</strong><br>
+                            <div class="alert alert-light mt-2">
+                                {{ comments }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Next Steps (if attending) -->
+            {% if attending %}
+            <div class="card mb-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-arrow-right"></i> Next Steps</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-3">
+                        Great! We're looking forward to seeing you. You'll receive additional emails shortly with:
+                    </p>
+                    <ul class="mb-0">
+                        <li><i class="fas fa-file-alt text-info"></i> A request for additional information</li>
+                        {% if course.hotel_night1 or course.hotel_night2 or course.hotel_night3 %}
+                        <li><i class="fas fa-hotel text-warning"></i> Hotel accommodation request form</li>
+                        {% endif %}
+                        <li><i class="fas fa-paperclip text-secondary"></i> Instructions for uploading required documents</li>
+                    </ul>
+                </div>
+            </div>
+            {% else %}
+            <div class="card mb-4 border-secondary">
+                <div class="card-body text-center">
+                    <p class="mb-0">
+                        We're sorry you can't make it. We hope to see you at a future event!
+                    </p>
+                </div>
+            </div>
+            {% endif %}            
+
+<!-- Email Confirmation Notice -->
+            <div class="alert alert-info">
+                <i class="fas fa-envelope"></i>
+                <strong>Confirmation Email Sent</strong><br>
+                A confirmation email has been sent to <strong>{{ person.email }}</strong> with a copy of your response.
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="text-center mb-5">
+                {% if attending %}
+                <p class="text-muted mb-3">Need to change your response?</p>
+                <a href="{{ url_for('rsvp', token=person.token) }}" class="btn btn-outline-primary">
+                    <i class="fas fa-edit"></i> Update My RSVP
+                </a>
+                {% else %}
+                <a href="{{ url_for('rsvp', token=person.token) }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-edit"></i> Change My Response
+                </a>
+                {% endif %}
+            </div>
+            
+            <!-- Contact Information -->
+            <div class="card border-secondary">
+                <div class="card-body text-center">
+                    <small class="text-muted">
+                        <i class="fas fa-question-circle"></i> 
+                        Questions or need to make changes? Contact us at 
+                        <a href="mailto:{{ config.MAIL_DEFAULT_SENDER }}">{{ config.MAIL_DEFAULT_SENDER }}</a>
+                    </small>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .fa-check-circle {
+        animation: scaleIn 0.5s ease-out;
+    }
+    
+    @keyframes scaleIn {
+        from {
+            transform: scale(0);
+            opacity: 0;
+        }
+        to {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+</style>
+{% endblock %}

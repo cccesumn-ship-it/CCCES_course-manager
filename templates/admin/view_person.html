@@ -1,0 +1,480 @@
+{% extends "base.html" %}
+
+{% block title %}{{ person.first_name }} {{ person.last_name }} - Details{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>
+                    <i class="fas fa-user"></i> 
+                    {{ person.first_name }} {{ person.last_name }}
+                </h2>
+                <div>
+                    <a href="{{ url_for('edit_person', person_id=person.id) }}" 
+                       class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit
+                    </a>
+                    <a href="{{ url_for('course_detail', course_id=person.course_id) }}" 
+                       class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Course
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-id-card"></i> Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-graduation-cap"></i> Course:</strong><br>
+                            {{ person.course.name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-user-tag"></i> Role:</strong><br>
+                            <span class="badge bg-primary">{{ person.role }}</span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-envelope"></i> Email:</strong><br>
+                            <a href="mailto:{{ person.email }}">{{ person.email }}</a>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-flag"></i> RSVP Status:</strong><br>
+                            {% if person.status == 'ATTENDING' %}
+                                <span class="badge badge-custom status-attending">
+                                    <i class="fas fa-check"></i> Attending
+                                </span>
+                            {% elif person.status == 'NOT_ATTENDING' %}
+                                <span class="badge badge-custom status-not-attending">
+                                    <i class="fas fa-times"></i> Not Attending
+                                </span>
+                            {% else %}
+                                <span class="badge badge-custom status-no-response">
+                                    <i class="fas fa-clock"></i> No Response
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-key"></i> Unique Token:</strong><br>
+                            <code>{{ person.token }}</code>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-calendar-plus"></i> Added:</strong><br>
+                            {{ person.created_at.strftime('%B %d, %Y at %I:%M %p') if person.created_at else 'N/A' }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- RSVP Response -->
+            {% if person.rsvp_response %}
+            <div class="card mb-4">                
+
+<div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-reply"></i> RSVP Response</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-check-circle"></i> Response:</strong><br>
+                            {% if person.rsvp_response.attending %}
+                                <span class="badge bg-success">Will Attend</span>
+                            {% else %}
+                                <span class="badge bg-danger">Cannot Attend</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-calendar"></i> Responded On:</strong><br>
+                            {{ person.rsvp_response.responded_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                        {% if person.rsvp_response.comments %}
+                        <div class="col-12">
+                            <strong><i class="fas fa-comment"></i> Comments:</strong><br>
+                            <div class="alert alert-light mt-2">
+                                {{ person.rsvp_response.comments }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Info Form Data -->
+            {% if person.info_completed %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-file-alt"></i> Information Form</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-phone"></i> Phone:</strong><br>
+                            {{ person.phone or 'Not provided' }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-building"></i> Organization:</strong><br>
+                            {{ person.organization or 'Not provided' }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-map-marker-alt"></i> Address:</strong><br>
+                            {{ person.address or 'Not provided' }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-utensils"></i> Dietary Restrictions:</strong><br>
+                            {{ person.dietary_restrictions or 'None' }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-wheelchair"></i> Accessibility Needs:</strong><br>
+                            {{ person.accessibility_needs or 'None' }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-tshirt"></i> T-Shirt Size:</strong><br>
+                            {{ person.tshirt_size or 'Not provided' }}
+                        </div>
+                        
+                        {% if person.info_completed_at %}
+                        <div class="col-12 mb-3">
+                            <strong><i class="fas fa-calendar-check"></i> Completed On:</strong><br>
+                            {{ person.info_completed_at.strftime('%B %d, %Y at %I:%M %p') }}
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.emergency_contact_name %}                        
+
+<div class="col-12">
+                            <hr>
+                            <h6><i class="fas fa-ambulance"></i> Emergency Contact</h6>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Name:</strong><br>
+                            {{ person.emergency_contact_name }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong>Phone:</strong><br>
+                            {{ person.emergency_contact_phone }}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Custom Questions Answers -->
+            {% if person.custom_answers %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-question-circle"></i> Custom Questions Responses</h5>
+                </div>
+                <div class="card-body">
+                    {% for answer in person.custom_answers %}
+                    <div class="mb-3">
+                        <strong>{{ answer.question.question_text }}</strong><br>
+                        <div class="alert alert-light mt-1 mb-0">
+                            {{ answer.answer_text or 'No answer provided' }}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Hotel Request -->
+            {% if person.hotel_request %}
+            <div class="card mb-4">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-hotel"></i> Hotel Accommodation Request</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-bed"></i> Need Hotel:</strong><br>
+                            {% if person.hotel_request.need_hotel %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <strong><i class="fas fa-calendar-check"></i> Completed:</strong><br>
+                            {% if person.hotel_request.completed %}
+                                <span class="badge bg-success">Yes</span>
+                            {% else %}
+                                <span class="badge bg-warning">No</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if person.hotel_request.need_hotel %}
+                        <div class="col-12">
+                            <hr>
+                            <h6><i class="fas fa-moon"></i> Requested Nights:</h6>
+                        </div>
+                        
+                        {% if person.course.hotel_night1 %}
+                        <div class="col-md-4 mb-3">
+                            <strong>{{ person.course.hotel_night1_label }}</strong><br>
+                            {{ person.course.hotel_night1.strftime('%B %d, %Y') }}<br>
+                            {% if person.hotel_request.night1 %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Requested</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-times"></i> Not Requested</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.course.hotel_night2 %}
+                        <div class="col-md-4 mb-3">                           
+
+ <strong>{{ person.course.hotel_night2_label }}</strong><br>
+                            {{ person.course.hotel_night2.strftime('%B %d, %Y') }}<br>
+                            {% if person.hotel_request.night2 %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Requested</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-times"></i> Not Requested</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.course.hotel_night3 %}
+                        <div class="col-md-4 mb-3">
+                            <strong>{{ person.course.hotel_night3_label }}</strong><br>
+                            {{ person.course.hotel_night3.strftime('%B %d, %Y') }}<br>
+                            {% if person.hotel_request.night3 %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Requested</span>
+                            {% else %}
+                                <span class="badge bg-secondary"><i class="fas fa-times"></i> Not Requested</span>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        {% if person.hotel_request.special_requests %}
+                        <div class="col-12">
+                            <hr>
+                            <strong><i class="fas fa-comment-dots"></i> Special Requests:</strong><br>
+                            <div class="alert alert-light mt-2">
+                                {{ person.hotel_request.special_requests }}
+                            </div>
+                        </div>
+                        {% endif %}
+                        {% endif %}
+                        
+                        {% if person.hotel_request.completed_at %}
+                        <div class="col-12 mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-clock"></i> 
+                                Completed on {{ person.hotel_request.completed_at.strftime('%B %d, %Y at %I:%M %p') }}
+                            </small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Uploaded Files -->
+            {% if person.files %}
+            <div class="card mb-4">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0"><i class="fas fa-paperclip"></i> Uploaded Files ({{ person.files|length }})</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Filename</th>
+                                    <th>Type</th>
+                                    <th>Size</th>
+                                    <th>Uploaded</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in person.files %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file"></i> {{ file.original_filename }}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ file.file_type }}</span>
+                                    </td>
+                                    <td>
+                                        {{ "%.2f"|format(file.file_size / 1024) }} KB
+                                    </td>
+                                    <td>
+                                        {{ file.uploaded_at.strftime('%b %d, %Y') }}
+                                    </td>
+                                    <td>                                        
+
+<a href="{{ url_for('download_file', file_id=file.id) }}" 
+                                           class="btn btn-sm btn-outline-primary"
+                                           title="Download">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        <form method="POST" 
+                                              action="{{ url_for('delete_file', file_id=file.id) }}" 
+                                              style="display: inline;">
+                                            <button type="submit" 
+                                                    class="btn btn-sm btn-outline-danger"
+                                                    onclick="return confirm('Delete this file?')"
+                                                    title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Quick Actions -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <form method="POST" action="{{ url_for('resend_rsvp_email', person_id=person.id) }}">
+                                <button type="submit" class="btn btn-outline-primary w-100">
+                                    <i class="fas fa-envelope"></i> Resend RSVP
+                                </button>
+                            </form>
+                        </div>
+                        
+                        {% if person.status == 'ATTENDING' %}
+                        <div class="col-md-4 mb-2">
+                            <form method="POST" action="{{ url_for('resend_info_email', person_id=person.id) }}">
+                                <button type="submit" class="btn btn-outline-success w-100">
+                                    <i class="fas fa-file-alt"></i> Resend Info Form
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <div class="col-md-4 mb-2">
+                            <form method="POST" action="{{ url_for('resend_hotel_email', person_id=person.id) }}">
+                                <button type="submit" class="btn btn-outline-info w-100">
+                                    <i class="fas fa-hotel"></i> Resend Hotel Request
+                                </button>
+                            </form>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="col-md-4 mb-2">
+                            <a href="{{ url_for('edit_person', person_id=person.id) }}" 
+                               class="btn btn-outline-secondary w-100">
+                                <i class="fas fa-edit"></i> Edit Person
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-4 mb-2">
+                            <a href="{{ url_for('export_person_data', person_id=person.id) }}" 
+                               class="btn btn-outline-success w-100">
+                                <i class="fas fa-file-excel"></i> Export to Excel
+                            </a>
+                        </div>
+                        
+                        <div class="col-md-4 mb-2">
+                            <form method="POST" 
+                                  action="{{ url_for('delete_person', person_id=person.id) }}"
+                                  onsubmit="return confirm('Are you sure you want to delete this person? This cannot be undone!');">                                
+
+<button type="submit" class="btn btn-outline-danger w-100">
+                                    <i class="fas fa-trash"></i> Delete Person
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Activity Log (Optional - if you implement it) -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-history"></i> Activity Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="timeline">
+                        {% if person.created_at %}
+                        <li>
+                            <i class="fas fa-user-plus text-primary"></i>
+                            <strong>Person Added</strong><br>
+                            <small class="text-muted">{{ person.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        </li>
+                        {% endif %}
+                        
+                        {% if person.rsvp_response %}
+                        <li>
+                            <i class="fas fa-reply text-success"></i>
+                            <strong>RSVP Response Submitted</strong><br>
+                            <small class="text-muted">{{ person.rsvp_response.responded_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        </li>
+                        {% endif %}
+                        
+                        {% if person.info_completed_at %}
+                        <li>
+                            <i class="fas fa-file-alt text-info"></i>
+                            <strong>Info Form Completed</strong><br>
+                            <small class="text-muted">{{ person.info_completed_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        </li>
+                        {% endif %}
+                        
+                        {% if person.hotel_request and person.hotel_request.completed_at %}
+                        <li>
+                            <i class="fas fa-hotel text-warning"></i>
+                            <strong>Hotel Request Completed</strong><br>
+                            <small class="text-muted">{{ person.hotel_request.completed_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        </li>
+                        {% endif %}
+                        
+                        {% for file in person.files %}
+                        <li>
+                            <i class="fas fa-paperclip text-secondary"></i>
+                            <strong>File Uploaded: {{ file.original_filename }}</strong><br>
+                            <small class="text-muted">{{ file.uploaded_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        list-style: none;
+        padding: 0;
+    }
+    
+    .timeline li {
+        padding: 15px;
+        border-left: 3px solid #e9ecef;
+        margin-left: 20px;
+        position: relative;
+    }
+    
+    .timeline li i {
+        position: absolute;
+        left: -13px;
+        background: white;
+        padding: 5px;
+        border-radius: 50%;
+    }
+    
+    .timeline li:last-child {
+        border-left: none;
+    }
+</style>
+{% endblock %}

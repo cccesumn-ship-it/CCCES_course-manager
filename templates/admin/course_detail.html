@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+
+{% block title %}{{ course.name }} - Course Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    
+    <!-- Course Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h2><i class="fas fa-graduation-cap"></i> {{ course.name }}</h2>
+                    <p class="text-muted mb-0">
+                        <i class="fas fa-calendar"></i> 
+                        {{ course.start_date.strftime('%B %d, %Y') }} - {{ course.end_date.strftime('%B %d, %Y') }}
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                    </a>
+                    <a href="{{ url_for('edit_course', course_id=course.id) }}" class="btn btn-outline-primary">
+                        <i class="fas fa-edit"></i> Edit Course
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <h3 class="text-primary">{{ stats.total_invited }}</h3>
+                <p><i class="fas fa-users"></i> Total Invited</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <h3 class="text-success">{{ stats.total_attending }}</h3>
+                <p><i class="fas fa-user-check"></i> Attending</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <h3 class="text-danger">{{ stats.total_not_attending }}</h3>
+                <p><i class="fas fa-user-times"></i> Not Attending</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card text-center">
+                <h3 class="text-secondary">{{ stats.total_no_response }}</h3>
+                <p><i class="fas fa-user-clock"></i> No Response</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Progress Bars -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Info Form Completion</h6>
+                    <div class="progress" style="height: 30px;">
+                        {% set info_pct = (stats.info_completed / stats.total_attending * 100) if stats.total_attending > 0 else 0 %}
+                        <div class="progress-bar bg-success" 
+                             style="width: {{ info_pct }}%">
+                            {{ stats.info_completed }} / {{ stats.total_attending }}
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ "%.1f"|format(info_pct) }}% completed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">Hotel Request Completion</h6>
+                    <div class="progress" style="height: 30px;">                       
+
+ {% set hotel_pct = (stats.hotel_completed / stats.total_attending * 100) if stats.total_attending > 0 else 0 %}
+                        <div class="progress-bar bg-info" 
+                             style="width: {{ hotel_pct }}%">
+                            {{ stats.hotel_completed }} / {{ stats.total_attending }}
+                        </div>
+                    </div>
+                    <small class="text-muted">{{ "%.1f"|format(hotel_pct) }}% completed</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-tools"></i> Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Person Management -->
+                        <div class="col-md-4 mb-3">
+                            <h6><i class="fas fa-users"></i> Person Management</h6>
+                            <a href="{{ url_for('upload_persons', course_id=course.id) }}" class="btn btn-outline-primary btn-sm w-100 mb-2">
+                                <i class="fas fa-file-upload"></i> Upload CSV/Excel
+                            </a>
+                            <a href="{{ url_for('add_person', course_id=course.id) }}" class="btn btn-outline-primary btn-sm w-100">
+                                <i class="fas fa-user-plus"></i> Add Single Person
+                            </a>
+                        </div>
+                        
+                        <!-- Email Actions -->
+                        <div class="col-md-4 mb-3">
+                            <h6><i class="fas fa-envelope"></i> Email Actions</h6>
+                            <form method="POST" action="{{ url_for('send_rsvp_emails', course_id=course.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-success btn-sm w-100 mb-2">
+                                    <i class="fas fa-paper-plane"></i> Send RSVP Emails
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('send_info_forms', course_id=course.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-success btn-sm w-100 mb-2">
+                                    <i class="fas fa-file-alt"></i> Send Info Forms
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('send_hotel_requests', course_id=course.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                                    <i class="fas fa-hotel"></i> Send Hotel Requests
+                                </button>
+                            </form>
+                        </div>
+                        
+                        <!-- Other Actions -->
+                        <div class="col-md-4 mb-3">
+                            <h6><i class="fas fa-cog"></i> Other Actions</h6>
+                            <a href="{{ url_for('manage_questions', course_id=course.id) }}" class="btn btn-outline-secondary btn-sm w-100 mb-2">
+                                <i class="fas fa-question-circle"></i> Manage Questions
+                            </a>
+                            <a href="{{ url_for('export_course_data', course_id=course.id) }}" class="btn btn-outline-info btn-sm w-100 mb-2">
+                                <i class="fas fa-file-excel"></i> Export to Excel
+                            </a>                           
+
+ <form method="POST" action="{{ url_for('run_info_reminders', course_id=course.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-warning btn-sm w-100 mb-2">
+                                    <i class="fas fa-bell"></i> Send Info Reminders
+                                </button>
+                            </form>
+                            <form method="POST" action="{{ url_for('run_hotel_reminders', course_id=course.id) }}" style="display: inline;">
+                                <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                                    <i class="fas fa-bell"></i> Send Hotel Reminders
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hotel Summary -->
+    {% if hotel_summary %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-hotel"></i> Hotel Accommodation Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        {% if course.hotel_night1 %}
+                        <div class="col-md-4">
+                            <div class="stat-box">
+                                <h4 class="text-info">{{ hotel_summary.night1_count }}</h4>
+                                <p class="mb-0">{{ course.hotel_night1_label }}</p>
+                                <small class="text-muted">{{ course.hotel_night1.strftime('%b %d') }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if course.hotel_night2 %}
+                        <div class="col-md-4">
+                            <div class="stat-box">
+                                <h4 class="text-info">{{ hotel_summary.night2_count }}</h4>
+                                <p class="mb-0">{{ course.hotel_night2_label }}</p>
+                                <small class="text-muted">{{ course.hotel_night2.strftime('%b %d') }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if course.hotel_night3 %}
+                        <div class="col-md-4">
+                            <div class="stat-box">
+                                <h4 class="text-info">{{ hotel_summary.night3_count }}</h4>
+                                <p class="mb-0">{{ course.hotel_night3_label }}</p>
+                                <small class="text-muted">{{ course.hotel_night3.strftime('%b %d') }}</small>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Participants Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Participants ({{ participants|length }})</h5>
+                    <a href="{{ url_for('export_course_data', course_id=course.id, role='PARTICIPANT') }}" 
+                       class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-download"></i> Export Participants
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if participants %}                   
+
+ <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Info</th>
+                                    <th>Hotel</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for person in participants %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ person.first_name }} {{ person.last_name }}</strong>
+                                    </td>
+                                    <td>{{ person.email }}</td>
+                                    <td>
+                                        {% if person.status == 'ATTENDING' %}
+                                            <span class="badge badge-custom status-attending">
+                                                <i class="fas fa-check"></i> Attending
+                                            </span>
+                                        {% elif person.status == 'NOT_ATTENDING' %}
+                                            <span class="badge badge-custom status-not-attending">
+                                                <i class="fas fa-times"></i> Not Attending
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-custom status-no-response">
+                                                <i class="fas fa-clock"></i> No Response
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if person.info_completed %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check-circle"></i> Completed
+                                            </span>
+                                        {% elif person.status == 'ATTENDING' %}
+                                            <span class="text-warning">
+                                                <i class="fas fa-hourglass-half"></i> Pending
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if person.hotel_request and person.hotel_request.completed %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check-circle"></i> 
+                                                {% if person.hotel_request.need_hotel %}
+                                                    Needs Hotel
+                                                {% else %}
+                                                    No Hotel
+                                                {% endif %}
+                                            </span>
+                                        {% elif person.status == 'ATTENDING' %}
+                                            <span class="text-warning">
+                                                <i class="fas fa-hourglass-half"></i> Pending
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('view_person', person_id=person.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('edit_person', person_id=person.id) }}" 
+                                               class="btn btn-outline-secondary btn-sm" 
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-info btn-sm" 
+                                                    onclick="resendEmail({{ person.id }}, 'rsvp')"
+                                                    title="Resend RSVP">                                               
+
+ <i class="fas fa-envelope"></i>
+                                            </button>
+                                            <form method="POST" 
+                                                  action="{{ url_for('delete_person', person_id=person.id) }}" 
+                                                  style="display: inline;">
+                                                <button type="submit" 
+                                                        class="btn btn-outline-danger btn-sm delete-confirm" 
+                                                        title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> No participants added yet.
+                        <a href="{{ url_for('upload_persons', course_id=course.id) }}">Upload participants now</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Faculty Table -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-chalkboard-teacher"></i> Faculty ({{ faculty|length }})</h5>
+                    <a href="{{ url_for('export_course_data', course_id=course.id, role='FACULTY') }}" 
+                       class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-download"></i> Export Faculty
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if faculty %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Info</th>
+                                    <th>Hotel</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for person in faculty %}
+                                <tr>
+                                    <td>
+                                        <strong>{{ person.first_name }} {{ person.last_name }}</strong>
+                                    </td>
+                                    <td>{{ person.email }}</td>
+                                    <td>
+                                        {% if person.status == 'ATTENDING' %}
+                                            <span class="badge badge-custom status-attending">
+                                                <i class="fas fa-check"></i> Attending
+                                            </span>
+                                        {% elif person.status == 'NOT_ATTENDING' %}
+                                            <span class="badge badge-custom status-not-attending">
+                                                <i class="fas fa-times"></i> Not Attending
+                                            </span>
+                                        {% else %}
+                                            <span class="badge badge-custom status-no-response">
+                                                <i class="fas fa-clock"></i> No Response
+                                            </span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if person.info_completed %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check-circle"></i> Completed
+                                            </span>
+                                        {% elif person.status == 'ATTENDING' %}
+                                            <span class="text-warning">
+                                                <i class="fas fa-hourglass-half"></i> Pending
+                                            </span>                                        
+
+{% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if person.hotel_request and person.hotel_request.completed %}
+                                            <span class="text-success">
+                                                <i class="fas fa-check-circle"></i> 
+                                                {% if person.hotel_request.need_hotel %}
+                                                    Needs Hotel
+                                                {% else %}
+                                                    No Hotel
+                                                {% endif %}
+                                            </span>
+                                        {% elif person.status == 'ATTENDING' %}
+                                            <span class="text-warning">
+                                                <i class="fas fa-hourglass-half"></i> Pending
+                                            </span>
+                                        {% else %}
+                                            <span class="text-muted">N/A</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="{{ url_for('view_person', person_id=person.id) }}" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="{{ url_for('edit_person', person_id=person.id) }}" 
+                                               class="btn btn-outline-secondary btn-sm" 
+                                               title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-info btn-sm" 
+                                                    onclick="resendEmail({{ person.id }}, 'rsvp')"
+                                                    title="Resend RSVP">
+                                                <i class="fas fa-envelope"></i>
+                                            </button>
+                                            <form method="POST" 
+                                                  action="{{ url_for('delete_person', person_id=person.id) }}" 
+                                                  style="display: inline;">
+                                                <button type="submit" 
+                                                        class="btn btn-outline-danger btn-sm delete-confirm" 
+                                                        title="Delete">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-info text-center">
+                        <i class="fas fa-info-circle"></i> No faculty added yet.
+                        <a href="{{ url_for('upload_persons', course_id=course.id) }}">Upload faculty now</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<style>
+    .stat-box {
+        padding: 15px;
+        border-radius: 8px;
+        background: #f8f9fa;
+    }
+</style>
+
+<script>
+    function resendEmail(personId, type) {
+        if (!confirm('Are you sure you want to resend this email?')) {
+            return;
+        }
+        
+        let url = '';
+        if (type === 'rsvp') {
+            url = `/api/person/${personId}/resend-rsvp`;
+        } else if (type === 'info') {
+            url = `/api/person/${personId}/resend-info`;
+        } else if (type === 'hotel') {
+            url = `/api/person/${personId}/resend-hotel`;
+        }
+
+fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Email sent successfully!');
+            } else {
+                alert('Failed to send email: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error);
+        });
+    }
+</script>
+{% endblock %}
