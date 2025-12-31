@@ -891,13 +891,17 @@ def hotel_form(token):
             
             hotel.completed = True
             hotel.completed_at = datetime.utcnow()
-hotel.completed = True
-            hotel.completed_at = datetime.utcnow()
             hotel.updated_at = datetime.utcnow()
             
             db.session.commit()
             
             return render_template('public/hotel_success.html', person=person, course=course, hotel=hotel)
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error saving hotel request: {str(e)}', 'danger')
+    
+    return render_template('public/hotel_form.html', person=person, course=course, hotel=hotel)
         
         except Exception as e:
             db.session.rollback()
