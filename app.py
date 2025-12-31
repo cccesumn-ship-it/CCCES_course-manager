@@ -908,6 +908,12 @@ def hotel_form(token):
             flash(f'Error saving hotel request: {str(e)}', 'danger')
     
     return render_template('public/hotel_form.html', person=person, course=course, hotel=hotel)
+        
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error saving hotel request: {str(e)}', 'danger')
+    
+    return render_template('public/hotel_form.html', person=person, course=course, hotel=hotel)
 
 
 # ============================================
