@@ -877,7 +877,6 @@ def hotel_form(token):
     if request.method == 'POST':
         try:
             need_hotel = request.form.get('need_hotel') == 'yes'
-            
             hotel.need_hotel = need_hotel
             
             if need_hotel:
@@ -896,26 +895,11 @@ def hotel_form(token):
             db.session.commit()
             
             return render_template('public/hotel_success.html', person=person, course=course, hotel=hotel)
-        
         except Exception as e:
             db.session.rollback()
             flash(f'Error saving hotel request: {str(e)}', 'danger')
     
     return render_template('public/hotel_form.html', person=person, course=course, hotel=hotel)
-        
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error saving hotel request: {str(e)}', 'danger')
-    
-    return render_template('public/hotel_form.html', person=person, course=course, hotel=hotel)
-        
-        except Exception as e:
-            db.session.rollback()
-            flash(f'Error saving hotel request: {str(e)}', 'danger')
-    
-    return render_template('public/hotel_form.html', person=person, course=course, hotel=hotel)
-
-
 # ============================================
 # PUBLIC ROUTES - FILE UPLOAD
 # ============================================
